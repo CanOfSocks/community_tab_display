@@ -6,4 +6,4 @@ https://github.com/HoloArchivists/youtube-community-tab
 ## Usage
 -Install requirements
 -Set values within config.py for your setup
--Run generate.py from the root folder.
+-Run generate.py from the repo folder.
