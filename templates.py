@@ -58,7 +58,7 @@ def makePost(info, pictures, file_directory, web_root_directory, folder_name):
     html_page += '<div class="post-content">'
     # Join any content fields, replace newline characters with paragraph
     content_text = ""
-    if info['content_text'].get('runs') is not None:
+    if info.get('content_text') is not None and info['content_text'].get('runs') is not None:
         for run in info['content_text']['runs']:
             if run.get('urlEndpoint') is not None:
                 content_text += '<a href="{0}" target="_blank" rel="noopener noreferrer">{1}</a>'.format(run['urlEndpoint'].get('url'), html.escape(run['text'])).replace('\r\n', '</p><p>').replace('\n', '</p><p>')
