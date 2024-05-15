@@ -63,17 +63,19 @@ def processFolder(file_directory, html_directory, web_root_directory):
         
     home_thumbnail = ""
     home_text = ""
+    home_latest = ""
     home_posts = len(posts)
     
     for post in posts:
         try:
-            if post['author']['authorThumbnail']['thumbnails'][len(posts[0]['author']['authorThumbnail']['thumbnails'])-1]['url'] is not None and post['author']['authorText']['runs'][0]['text'] is not None:
+            if post['author']['authorThumbnail']['thumbnails'][len(posts[0]['author']['authorThumbnail']['thumbnails'])-1]['url'] is not None and post['author']['authorText']['runs'][0]['text'] is not None and post['_published']['lastUpdatedTimestamp']:
                 home_thumbnail = post['author']['authorThumbnail']['thumbnails'][len(posts[0]['author']['authorThumbnail']['thumbnails'])-1]['url']
                 home_text = post['author']['authorText']['runs'][0]['text']
+                home_latest = post['_published']['lastUpdatedTimestamp']
                 break
         except:
             pass
-    return home_thumbnail, home_text, home_posts       
+    return home_thumbnail, home_text, home_posts, home_latest       
     
 
 def generateHTML(files_directory, html_directory, web_root_directory):
@@ -83,12 +85,13 @@ def generateHTML(files_directory, html_directory, web_root_directory):
         #Shuffle directiories for testing
         shuffle(dirs)
         for dir in dirs:
-            thumbnail, channel, count = processFolder(os.path.join(root, dir), html_directory, web_root_directory)
+            thumbnail, channel, count, latest = processFolder(os.path.join(root, dir), html_directory, web_root_directory)
             info = {
                 "folder": dir.replace(web_root_directory, ''),
                 "thumbnail": thumbnail,
                 "channel": channel,
-                "count": count
+                "count": count,
+                "latest": latest
             }
             folders.append(info)
             
