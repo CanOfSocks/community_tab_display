@@ -120,7 +120,7 @@ def makeIndex(folder_list, html_directory, web_root_directory):
 		<table>"""
     for folder in folder_list:
         # Add timestamp variable to new row
-        html_page += '<tr data-timestamp="{0}"><td>'.format(folder['_published']['lastUpdatedTimestamp'])
+        html_page += '<tr data-timestamp="{0}"><td>'.format(folder.get('latest'))
         # Add header profile picture
         html_page += '<div class="post-header"><img src="{0}" alt="Profile Picture">'.format(folder.get('thumbnail'))
         # Add channel name/link
