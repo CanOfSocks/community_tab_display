@@ -107,17 +107,7 @@ def makePost(info, pictures, file_directory, web_root_directory, folder_name):
 
 def makeIndex(folder_list, html_directory, web_root_directory):
     posts_dir = html_directory.replace(web_root_directory, '')
-    html_page = """<!DOCTYPE html>
-<html>
-<head>
-	<link rel="stylesheet" type="text/css" href="/styles.css">
-</head>
-<body>
-	<div class="home-button">
-        <a href="/">Home</a>
-    </div>
-	<div class="container">
-		<table>"""
+    html_page = '<!DOCTYPE html><html><head><link rel="stylesheet" type="text/css" href="/styles.css"></head><body><div class="home-button"><a href="/">Home</a></div><div class="container"><table>'
     for folder in folder_list:
         # Add timestamp variable to new row
         html_page += '<tr data-timestamp="{0}"><td>'.format(folder.get('latest'))
@@ -131,13 +121,8 @@ def makeIndex(folder_list, html_directory, web_root_directory):
         # Add last updated
         html_page += '<p>Last update:</p>'
         # Close row
-        html_page += "</div></div></td></tr>"
-    html_page += """</table>
-		<div class="clearfix"></div>
-	</div>
-	<script src="/script.js"></script>
-</body>
-</html>"""
+        html_page += '</div></div></td></tr>'
+    html_page += '</table><div class="clearfix"></div></div><script src="/script.js"></script></body></html>'
     return pretty_html(html_page)
 
 
