@@ -122,7 +122,7 @@ def makeIndex(folder_list, html_directory, web_root_directory):
         html_page += '<p>{0} posts</p>'.format(folder.get('count'))
         
         # Add last updated
-        html_page += '<p>Last update:</p>'
+        html_page += '<i>Last update:</i>'
         # Close row
         html_page += '</div></div></td></tr>'
     html_page += '</table><div class="clearfix"></div></div><script src="/script.js"></script></body></html>'
