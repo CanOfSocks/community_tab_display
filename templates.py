@@ -1,5 +1,5 @@
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin
+from urllib.parse import urljoin, quote_plus
 import config
 import html
 from os import path
@@ -85,16 +85,16 @@ def makePost(info, pictures, file_directory, web_root_directory, folder_name):
     
     if config.download_mask:
         #Create download buttons
-        html_page += '<div class="download-buttons"><a href="{0}/{1}/{2}.json">Download JSON</a>'.format(config.download_mask, folder_name, info['post_id'])
+        html_page += f'<div class="download-buttons"><a href="{quote_plus("{0}/{1}/{2}").format(config.download_mask, folder_name, info['post_id'])}.json">Download JSON</a>'
         i = 1
         # If only one picture, don't include number, otherwise number buttons
         if len(pictures) == 1:
             path = pictures[0].replace(file_directory, '')
-            html_page += '<a href="{0}/{1}{2}">Download Image</a>'.format(config.download_mask, folder_name, path)
+            html_page += f'<a href="{quote_plus("{0}/{1}{2}".format(config.download_mask, folder_name, path))}">Download Image</a>'
         else:
             for picture in pictures:
                 path = picture.replace(file_directory, '')
-                html_page += '<a href="{0}/{1}{2}">Download Image {3}</a>'.format(config.download_mask, folder_name,path,i)
+                html_page += f'<a href="{quote_plus("{0}/{1}{2}".format(config.download_mask, folder_name, path))}">Download Image {i}</a>'
                 i += 1
         # Close download buttons
         html_page += "</div>"
@@ -117,7 +117,7 @@ def makeIndex(folder_list, html_directory, web_root_directory):
         # Add header profile picture
         html_page += '<div class="post-header"><img src="{0}" alt="Profile Picture">'.format(folder.get('thumbnail'))
         # Add channel name/link
-        html_page += '<div><h3><a href="/{2}/{0}/1.html">{1}</a></h3>'.format(folder.get('folder'),folder.get('channel'), posts_dir)
+        html_page += f'<div><h3><a href="{quote_plus("/{1}/{0}/1.html").format(folder.get('folder'), posts_dir)}">{folder.get('channel')}</a></h3>'
         # Add post count
         html_page += '<p>{0} posts</p>'.format(folder.get('count'))
         
