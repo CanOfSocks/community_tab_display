@@ -40,7 +40,7 @@ def processFolder(file_directory, html_directory, web_root_directory):
     page = 1
     current = 1
     table_html = []
-    max_pages = math.ceil(len(posts))
+    max_pages = int(math.ceil(float(len(posts))/config.posts_per_page))
        
     for idx, post in enumerate(posts):
         pictures = get_picture_files(file_directory, post['post_id'])
