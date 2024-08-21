@@ -1,11 +1,34 @@
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin
+from urllib.parse import urljoin, quote
 import config
 import html
 from os import path
 
 def pretty_html(html_page):
-    soup = BeautifulSoup(html_page, features="html.parser")
+    
+    # Parse the HTML
+    soup = BeautifulSoup(html_page, 'html.parser')
+
+    # Tags and attributes to check
+    tags_and_attributes = {
+        'a': 'href',
+        'link': 'href',
+        'img': 'src',
+        'script': 'src',
+        # Add more tags and their relevant attributes as needed
+    }
+
+    # Iterate over each tag and its corresponding attribute
+    for tag, attribute in tags_and_attributes.items():
+        for element in soup.find_all(tag, {attribute: True}):
+            original_url = element[attribute]
+            encoded_url = quote(original_url, safe=':/')
+            element[attribute] = encoded_url
+
+    # Print the modified HTML
+    #print(soup.prettify())
+    
+    
     soup = soup.prettify()
     
     return str(soup)
@@ -117,7 +140,7 @@ def makeIndex(folder_list, html_directory, web_root_directory):
         # Add header profile picture
         html_page += '<div class="post-header"><img src="{0}" alt="Profile Picture">'.format(folder.get('thumbnail'))
         # Add channel name/link
-        html_page += '<div><h3><a href="/{2}/{0}/1.html">{1}</a></h3>'.format(folder.get('folder'),folder.get('channel'), posts_dir)
+        html_page += '<div><h3><a href="{2}/{0}/1.html">{1}</a></h3>'.format(folder.get('folder'),folder.get('channel'), posts_dir)
         # Add post count
         html_page += '<p>{0} posts</p>'.format(folder.get('count'))
         
