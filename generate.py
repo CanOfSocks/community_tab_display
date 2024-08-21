@@ -42,18 +42,18 @@ def processFolder(file_directory, html_directory, web_root_directory):
     table_html = []
     max_pages = math.ceil(len(posts))
        
-    for post in posts:
+    for idx, post in enumerate(posts):
         pictures = get_picture_files(file_directory, post['post_id'])
         table_html.append(templates.makePost(post, pictures, file_directory, web_root_directory, folder_name))
         
-        if current % config.posts_per_page == 0:
+        if current % config.posts_per_page == 0 or idx == len(posts) - 1:
             print("Generating page {0}".format(page))
             pagination = templates.generatePagination(page, max_pages, html_directory, folder_name, web_root_directory)
             page_html = templates.writePage(table_html, pagination)
             
             html_folder = os.path.join(html_directory, folder_name)
             os.makedirs(html_folder, exist_ok=True)
-            file = "{0}/{1}/{2}.html".format(html_directory, folder_name, page)
+            file = os.path.join(html_folder, "{0}.html".format(page))
             with open(file, 'w', encoding='utf-8') as f:
                 f.write(page_html)
             page += 1
@@ -83,7 +83,9 @@ def generateHTML(files_directory, html_directory, web_root_directory):
     folders = []
     for root, dirs, files in os.walk(files_directory):
         #Shuffle directiories for testing
-        shuffle(dirs)
+        #shuffle(dirs)
+        print("Found {1} directories: {0}".format(dirs, len(dirs)))
+        
         for dir in dirs:
             thumbnail, channel, count, latest = processFolder(os.path.join(root, dir), html_directory, web_root_directory)
             info = {
@@ -96,6 +98,7 @@ def generateHTML(files_directory, html_directory, web_root_directory):
             folders.append(info)
             
     print("Generating index page")
+    
     folders = sorted(folders, key=lambda x: x['folder'])
     index_html = templates.makeIndex(folders, html_directory, web_root_directory)
     file = '{0}/index.html'.format(web_root_directory)
