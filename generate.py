@@ -22,6 +22,11 @@ def get_picture_files(path, post_ID):
 
     return picture_files
 
+def get_extra_files(path, post_ID):
+    files = glob.glob(f"{path}/{post_ID}*")
+
+    return files
+
 def get_json_files(path):
     # Use glob to match the pattern '/*.json'
     json_files = glob.glob(path + '/*.json')
@@ -44,7 +49,8 @@ def processFolder(file_directory, html_directory, web_root_directory):
        
     for idx, post in enumerate(posts):
         pictures = get_picture_files(file_directory, post['post_id'])
-        table_html.append(templates.makePost(post, pictures, file_directory, web_root_directory, folder_name))
+        files = get_extra_files(file_directory, post['post_id'])
+        table_html.append(templates.makePost(post, pictures, file_directory, web_root_directory, folder_name, files))
         
         if current % config.posts_per_page == 0 or idx == len(posts) - 1:
             print("Generating page {0}".format(page))

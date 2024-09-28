@@ -59,7 +59,7 @@ def writePage(table_html, pagination_html):
     
     return pretty_html(html_page)
 
-def makePost(info, pictures, file_directory, web_root_directory, folder_name):
+def makePost(info, pictures, file_directory, web_root_directory, folder_name, files=None):
     print("Processing post: {0}".format(info['post_id']))
 
     # Add timestamp variable to new row
@@ -118,6 +118,12 @@ def makePost(info, pictures, file_directory, web_root_directory, folder_name):
             for picture in pictures:
                 path = picture.replace(file_directory, '')
                 html_page += '<a href="{0}/{1}{2}">Download Image {3}</a>'.format(config.download_mask, folder_name,path,i)
+                i += 1
+        i = 1
+        if files:
+            for file in files:
+                path = file.replace(file_directory, '')
+                html_page += '<a href="{0}/{1}{2}">Download File {3}</a>'.format(config.download_mask, folder_name,path,i)
                 i += 1
         # Close download buttons
         html_page += "</div>"
