@@ -12,3 +12,4 @@ Display [youtube-community-tab](https://github.com/HoloArchivists/youtube-commun
 ## Known issues
 - Timestamps from [youtube-community-tab](https://github.com/HoloArchivists/youtube-community-tab) `--dates` option appear to be from time of access, which will cause poor sorting on bulk-downloaded post content
 - Some metrics may not be present in a post json and not yet handled, please make an issue if you experience one
+- Making additional files (I.e. not the post json or pictures in the post itself) available via download button does not work correctly 
