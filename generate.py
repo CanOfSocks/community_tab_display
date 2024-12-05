@@ -54,7 +54,7 @@ def processFolder(file_directory, html_directory, web_root_directory):
         post_id_json = "{0}.json".format(post['post_id'])
         files = [
             file for file in files 
-            if file not in pictures and file != post_id_json
+            if file not in pictures and not file.endswith(post_id_json)
         ]
         
         table_html.append(templates.makePost(post, pictures, file_directory, web_root_directory, folder_name, files))
