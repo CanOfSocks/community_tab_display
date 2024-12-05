@@ -24,7 +24,7 @@ def get_picture_files(path, post_ID):
 
 def get_extra_files(path, post_ID):
     files = glob.glob(f"{path}/{post_ID}*")
-
+    print(files)
     return files
 
 def get_json_files(path):
