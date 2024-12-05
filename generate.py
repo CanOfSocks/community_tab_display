@@ -50,6 +50,13 @@ def processFolder(file_directory, html_directory, web_root_directory):
     for idx, post in enumerate(posts):
         pictures = get_picture_files(file_directory, post['post_id'])
         files = get_extra_files(file_directory, post['post_id'])
+        
+        post_id_json = "{0}.json".format(post['post_id'])
+        files = [
+            file for file in files 
+            if file not in pictures and file != post_id_json
+        ]
+        
         table_html.append(templates.makePost(post, pictures, file_directory, web_root_directory, folder_name, files))
         
         if current % config.posts_per_page == 0 or idx == len(posts) - 1:
