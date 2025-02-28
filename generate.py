@@ -2,12 +2,14 @@ import os
 import shutil
 import glob
 import json
-import config
 import math
 from random import shuffle
 import templates
+import process_ytct_logs
+import order
 
-
+with open('config.json', 'r') as f:
+    config = json.load(f)
 
 def get_picture_files(path, post_ID):
     # Create a list to store all picture files
@@ -32,7 +34,7 @@ def get_json_files(path):
     json_files = glob.glob(path + '/*.json')
     return json_files
 
-def processFolder(file_directory, html_directory, web_root_directory):
+def processFolder(file_directory, html_directory, web_root_directory, ytct_log=None, sorted_posts=None, clear_log=False):
     print(f"Processing directory: {file_directory}")
     jsonFiles = get_json_files(file_directory)
     folder_name = os.path.basename(file_directory)
@@ -40,7 +42,12 @@ def processFolder(file_directory, html_directory, web_root_directory):
     for file in jsonFiles:
         with open(file, 'r', encoding='utf-8') as f:
             posts.append(json.load(f))
-    posts.sort(key=lambda x: x['_published']['lastUpdatedTimestamp'], reverse=True)
+    
+    post_order = []
+    if ytct_log is not None and sorted_posts is not None:
+        post_order = process_ytct_logs.main(log_file=os.path.join(file_directory, ytct_log), json_file=os.path.join(file_directory, sorted_posts))
+
+    posts = order.sort_posts(posts,post_order)
     
     page = 1
     current = 1
@@ -91,7 +98,7 @@ def processFolder(file_directory, html_directory, web_root_directory):
     return home_thumbnail, home_text, home_posts, home_latest       
     
 
-def generateHTML(files_directory, html_directory, web_root_directory):
+def generateHTML(files_directory, html_directory, web_root_directory, ytct_log=None, sorted_posts=None, clear_log=False):
     
     folders = []
     for root, dirs, files in os.walk(files_directory):
@@ -100,7 +107,7 @@ def generateHTML(files_directory, html_directory, web_root_directory):
         print("Found {1} directories: {0}".format(dirs, len(dirs)))
         
         for dir in dirs:
-            thumbnail, channel, count, latest = processFolder(os.path.join(root, dir), html_directory, web_root_directory)
+            thumbnail, channel, count, latest = processFolder(os.path.join(root, dir), html_directory, web_root_directory, ytct_log, sorted_posts, clear_log)
             info = {
                 "folder": dir.replace(web_root_directory, ''),
                 "thumbnail": thumbnail,
@@ -129,6 +136,6 @@ def copyStyles(web_root_directory):
     shutil.copyfile(script_file, script_html)
 
 # Copy style files
-copyStyles(config.web_root_directory)
+copyStyles(config.get('web_root_directory'))
 # Call the function with the path to your directory
-generateHTML(config.files_directory, config.html_directory, config.web_root_directory)
+generateHTML(config.get('files_directory'), config.get('html_directory'), config.get('web_root_directory'), config.get('ytct_log'), config.get('sorted_posts'), config.get('clear_log', False))
