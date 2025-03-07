@@ -38,12 +38,14 @@ def processFolder(file_directory, html_directory, web_root_directory):
     folder_name = os.path.basename(file_directory)
     posts = []
     for file in jsonFiles:
-        if file.lower() == "sorted.json":
-            continue
-        with open(file, 'r', encoding='utf-8') as f:
-            post = json.load(f)
-            posts.append(post)
-            print(post)
+        try:
+            with open(file, 'r', encoding='utf-8') as f:
+                post = json.load(f)
+                if post.get("post_id", None) is None:
+                    continue
+                posts.append(post)
+        except Exception as e:
+            print(e)
     posts.sort(key=lambda x: x.get('_published', {}).get('lastUpdatedTimestamp'), reverse=True)
     
     page = 1
