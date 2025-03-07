@@ -59,8 +59,7 @@ def processFolder(file_directory, html_directory, web_root_directory):
         
         table_html.append(templates.makePost(post, pictures, file_directory, web_root_directory, folder_name, files))
         
-        #if current % config.posts_per_page == 0 or idx == len(posts) - 1:
-        if idx == len(posts) - 1:
+        if current % config.posts_per_page == 0 or idx == len(posts) - 1:
             print("Generating page {0}".format(page))
             pagination = templates.generatePagination(page, max_pages, html_directory, folder_name, web_root_directory)
             page_html = templates.writePage(table_html, pagination)
