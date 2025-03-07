@@ -40,14 +40,22 @@ def processFolder(file_directory, html_directory, web_root_directory, ytct_log=N
     folder_name = os.path.basename(file_directory)
     posts = []
     for file in jsonFiles:
-        with open(file, 'r', encoding='utf-8') as f:
-            posts.append(json.load(f))
+        # Add posts to array, ignore if loaded json does not have post_id field
+        try:
+            with open(file, 'r', encoding='utf-8') as f:
+                post = json.load(f)
+                if post.get("post_id", None) is None:
+                    continue
+                posts.append(post)
+
+        except Exception as e:
+            print(e)
     
     post_order = []
     if ytct_log is not None and sorted_posts is not None:
         post_order = process_ytct_logs.main(log_file=os.path.join(file_directory, ytct_log), json_file=os.path.join(file_directory, sorted_posts))
 
-    posts = order.sort_posts(posts,post_order)
+    posts = order.sort_posts(posts=posts,sorted_array=post_order)
     
     page = 1
     current = 1
