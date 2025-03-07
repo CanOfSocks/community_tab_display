@@ -40,7 +40,7 @@ def processFolder(file_directory, html_directory, web_root_directory):
     for file in jsonFiles:
         with open(file, 'r', encoding='utf-8') as f:
             posts.append(json.load(f))
-    posts.sort(key=lambda x: x.get('_published', {}).get('lastUpdatedTimestamp'), reverse=True)
+    posts.sort(key=lambda x: dict(x).get('_published', {}).get('lastUpdatedTimestamp'), reverse=True)
     
     page = 1
     current = 1
