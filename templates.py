@@ -97,7 +97,7 @@ def makePost(info, pictures, file_directory, web_root_directory, folder_name, fi
     i = 1
     for picture in pictures:
         path = picture.replace(web_root_directory, '')
-        html_page += '<img src="/{0}" alt="Post Image {1}">'.format(path,i)
+        html_page += '<img src="/{0}" alt="Post Image {1}" loading="lazy">'.format(path,i)
         i += 1
     # Close post content div
     html_page += "</div>"
