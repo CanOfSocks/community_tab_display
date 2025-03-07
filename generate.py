@@ -38,6 +38,8 @@ def processFolder(file_directory, html_directory, web_root_directory):
     folder_name = os.path.basename(file_directory)
     posts = []
     for file in jsonFiles:
+        if file.lower() == "sorted.json":
+            continue
         with open(file, 'r', encoding='utf-8') as f:
             post = json.load(f)
             posts.append(post)
