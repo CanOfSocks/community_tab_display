@@ -46,9 +46,7 @@ def writePage(table_html, pagination_html):
         <a href="/">Home</a>
     </div>
 	<div class="container">
-		<table>
-            {0}
-		</table>
+        {0}
 		<div class="clearfix"></div>
 		{1}
 	</div>
@@ -62,76 +60,90 @@ def writePage(table_html, pagination_html):
 def makePost(info, pictures, file_directory, web_root_directory, folder_name, files=None):
     print("Processing post: {0}".format(info['post_id']))
 
-    # Add timestamp variable to new row
-    html_page = '<tr data-timestamp="{0}"><td>'.format(info['_published']['lastUpdatedTimestamp'])
-    # Add header profile picture
+    # Start post container div
+    html_page = '<div class="post" data-timestamp="{0}">'.format(info['_published']['lastUpdatedTimestamp'])
+
+    # Add header with profile picture and channel name
+    html_page += '<div class="post-header">'
     if info['author']['authorThumbnail'] is None:
-        html_page += '<div class="post-header"><img src="" alt="Profile Picture">'
+        html_page += '<img src="" alt="Profile Picture" loading="lazy">'
     else:
-        html_page += '<div class="post-header"><img src="{0}" alt="Profile Picture">'.format(info['author']['authorThumbnail']['thumbnails'][len(info['author']['authorThumbnail']['thumbnails'])-1]['url'])
-    # Add channel name/link
-    html_page += '<div><h3><a href="//www.youtube.com/channel/{0}" target="_blank" rel="noopener noreferrer">{1}</a></h3>'.format(info['channel_id'],info['author']['authorText']['runs'][0]['text'])
-    # Add membership only badge if present
-    if info.get('sponsor_only_badge') is not None:
+        html_page += '<img src="{0}" alt="Profile Picture" loading="lazy">'.format(
+            info['author']['authorThumbnail']['thumbnails'][-1]['url']
+        )
+
+    html_page += '<div><h3><a href="//www.youtube.com/channel/{0}" target="_blank" rel="noopener noreferrer">{1}</a></h3>'.format(
+        info['channel_id'], info['author']['authorText']['runs'][0]['text']
+    )
+
+    # Add membership badge if applicable
+    if info.get('sponsor_only_badge'):
         html_page += "<p><i>Members only</i></p>"
-    # Close header
-    html_page += "</div></div>"
-    
-    # Start post content
+
+    html_page += "</div></div>"  # Close header div
+
+    # Post content
     html_page += '<div class="post-content">'
-    # Join any content fields, replace newline characters with paragraph
     content_text = ""
-    if info.get('content_text') is not None and info['content_text'].get('runs') is not None:
+
+    if info.get('content_text') and info['content_text'].get('runs'):
         for run in info['content_text']['runs']:
-            if run.get('urlEndpoint') is not None:
-                content_text += '<a href="{0}" target="_blank" rel="noopener noreferrer">{1}</a>'.format(run['urlEndpoint'].get('url'), html.escape(run['text'])).replace('\r\n', '</p><p>').replace('\n', '</p><p>')
-            elif run.get('browseEndpoint') is not None:
-                content_text += '<a href="//youtube.com{0}" target="_blank" rel="noopener noreferrer">{1}</a>'.format(run['browseEndpoint'].get('url'), html.escape(run['text'])).replace('\r\n', '</p><p>').replace('\n', '</p><p>')
-            elif run.get('navigationEndpoint') is not None:
-                content_text += '<a href="//youtube.com{0}" target="_blank" rel="noopener noreferrer">{1}</a>'.format(run['navigationEndpoint'].get('commandMetadata').get('webCommandMetadata').get('url'), html.escape(run['text'])).replace('\r\n', '</p><p>').replace('\n', '</p><p>')
+            text = html.escape(run.get('text', ''))
+            if run.get('urlEndpoint'):
+                content_text += '<a href="{0}" target="_blank" rel="noopener noreferrer">{1}</a>'.format(
+                    run['urlEndpoint']['url'], text
+                )
+            elif run.get('browseEndpoint'):
+                content_text += '<a href="//youtube.com{0}" target="_blank" rel="noopener noreferrer">{1}</a>'.format(
+                    run['browseEndpoint']['url'], text
+                )
+            elif run.get('navigationEndpoint'):
+                content_text += '<a href="//youtube.com{0}" target="_blank" rel="noopener noreferrer">{1}</a>'.format(
+                    run['navigationEndpoint']['commandMetadata']['webCommandMetadata']['url'], text
+                )
             else:
-                content_text += ' {0}'.format(html.escape(run['text'])).replace('\r\n', '</p><p>').replace('\n', '</p><p>')
+                content_text += " " + text
+
     html_page += '<p>{0}</p>'.format(content_text)
-    
-    # Add any associated pictures
-    i = 1
-    for picture in pictures:
+
+    # Add images with lazy loading
+    for i, picture in enumerate(pictures, start=1):
         path = picture.replace(web_root_directory, '')
-        html_page += '<img src="/{0}" alt="Post Image {1}">'.format(path,i)
-        i += 1
-    # Close post content div
-    html_page += "</div>"
-    
-    # Add post footer
-    if info['vote_count'] is not None:
-        html_page += '<div class="post-footer"><p>{0} likes</p><a href="//www.youtube.com/channel/UCL_qhgtOy0dy1Agp8vkySQg/community?lb={1}" target="_blank" rel="noopener noreferrer">{1}</a></div>'.format(info['vote_count']['simpleText'],info['post_id'])
-    
-    if config.download_mask:
-        #Create download buttons
-        html_page += '<div class="download-buttons"><a href="{0}/{1}/{2}.json">Download JSON</a>'.format(config.download_mask, folder_name, info['post_id'])
-        i = 1
-        # If only one picture, don't include number, otherwise number buttons
-        if len(pictures) == 1:
-            path = pictures[0].replace(file_directory, '')
-            html_page += '<a href="{0}/{1}{2}">Download Image</a>'.format(config.download_mask, folder_name, path)
-        else:
-            for picture in pictures:
-                path = picture.replace(file_directory, '')
-                html_page += '<a href="{0}/{1}{2}">Download Image {3}</a>'.format(config.download_mask, folder_name,path,i)
-                i += 1
-        i = 1
-        if files:
-            for file in files:
-                path = file.replace(file_directory, '')
-                html_page += '<a href="{0}/{1}{2}">Download File {3}</a>'.format(config.download_mask, folder_name,path,i)
-                i += 1
-        # Close download buttons
+        html_page += '<img src="/{0}" alt="Post Image {1}" loading="lazy">'.format(path, i)
+
+    html_page += "</div>"  # Close post-content div
+
+    # Post footer (likes and link)
+    if info['vote_count']:
+        html_page += '<div class="post-footer">'
+        html_page += '<p>{0} likes</p>'.format(info['vote_count']['simpleText'])
+        html_page += '<a href="//www.youtube.com/channel/UCL_qhgtOy0dy1Agp8vkySQg/community?lb={1}" target="_blank" rel="noopener noreferrer">{1}</a>'.format(
+            info['vote_count']['simpleText'], info['post_id']
+        )
         html_page += "</div>"
-    
-    # Finish row
-    html_page += "</td></tr>"
-    
+
+    # Download buttons
+    if config.download_mask:
+        html_page += '<div class="download-buttons">'
+        html_page += '<a href="{0}/{1}/{2}.json">Download JSON</a>'.format(config.download_mask, folder_name, info['post_id'])
+
+        if pictures:
+            for i, picture in enumerate(pictures, start=1):
+                path = picture.replace(file_directory, '')
+                label = "Download Image" if len(pictures) == 1 else f"Download Image {i}"
+                html_page += '<a href="{0}/{1}{2}">{3}</a>'.format(config.download_mask, folder_name, path, label)
+
+        if files:
+            for i, file in enumerate(files, start=1):
+                path = file.replace(file_directory, '')
+                html_page += '<a href="{0}/{1}{2}">Download File {3}</a>'.format(config.download_mask, folder_name, path, i)
+
+        html_page += "</div>"  # Close download-buttons div
+
+    html_page += "</div>"  # Close post div
+
     return html_page
+
 
 
 def makeIndex(folder_list, html_directory, web_root_directory):
