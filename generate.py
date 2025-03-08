@@ -60,7 +60,7 @@ def processFolder(file_directory, html_directory, web_root_directory, ytct_log=N
     page = 1
     current = 1
     table_html = []
-    max_pages = int(math.ceil(float(len(posts))/config.posts_per_page))
+    max_pages = int(math.ceil(float(len(posts))/config.get('posts_per_page')))
        
     for idx, post in enumerate(posts):
         pictures = get_picture_files(file_directory, post['post_id'])
@@ -76,7 +76,7 @@ def processFolder(file_directory, html_directory, web_root_directory, ytct_log=N
 
         post['files'] = files
         
-        if current % config.posts_per_page == 0 or idx == len(posts) - 1:
+        if current % config.get('posts_per_page') == 0 or idx == len(posts) - 1:
             print("Generating page {0}".format(page))
             pagination = templates.generatePagination(page, max_pages, html_directory, folder_name, web_root_directory)
             page_html = templates.writePage(table_html, pagination)
