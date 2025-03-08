@@ -42,11 +42,12 @@ def create_RSS(posts, rss_file_path, root_dir, website_base_url=""):
                 mime_type = "application/octet-stream"  # Default if unknown
             ET.SubElement(item, "file", type=mime_type).text = file_path
 
-    # Convert XML to string
-    xml_str = ET.tostring(rss, encoding="utf-8").decode()
 
     os.makedirs(os.path.dirname(rss_file_path), exist_ok=True)
-    with open(rss_file_path, "w", encoding="utf-8") as f:
-        f.write(xml_str)
+    
+    tree = ET.ElementTree(rss) 
+      
+    with open (rss_file_path, "wb") as files : 
+        tree.write(files) 
 
     print(f"RSS feed generated: {rss_file_path}")
