@@ -148,7 +148,8 @@ def generateHTML(files_directory, html_directory, web_root_directory, ytct_log=N
         f.write(index_html)
 
     if config.get("rss_feed_file", None) is not None and config.get("rss_feed_amount", 0) > 0:
-        rss.create_RSS
+        print("Creating RSS feed")
+        rss.create_RSS(latest_posts, config.get("rss_feed_file"), config.get('web_root_directory'), website_base_url=config.get('base_url'))
 
     print("Finished")
 
