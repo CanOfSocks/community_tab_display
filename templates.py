@@ -1,8 +1,12 @@
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, quote
-import config
+#import config
+import json
 import html
 from os import path
+
+with open('config.json', 'r') as f:
+    config = json.load(f)
 
 def pretty_html(html_page):
     
@@ -106,24 +110,24 @@ def makePost(info, pictures, file_directory, web_root_directory, folder_name, fi
     if info['vote_count'] is not None:
         html_page += '<div class="post-footer"><p>{0} likes</p><a href="//www.youtube.com/channel/UCL_qhgtOy0dy1Agp8vkySQg/community?lb={1}" target="_blank" rel="noopener noreferrer">{1}</a></div>'.format(info['vote_count']['simpleText'],info['post_id'])
     
-    if config.download_mask:
+    if config.get('download_mask'):
         #Create download buttons
-        html_page += '<div class="download-buttons"><a href="{0}/{1}/{2}.json">Download JSON</a>'.format(config.download_mask, folder_name, info['post_id'])
+        html_page += '<div class="download-buttons"><a href="{0}/{1}/{2}.json">Download JSON</a>'.format(config.get('download_mask'), folder_name, info['post_id'])
         i = 1
         # If only one picture, don't include number, otherwise number buttons
         if len(pictures) == 1:
             path = pictures[0].replace(file_directory, '')
-            html_page += '<a href="{0}/{1}{2}">Download Image</a>'.format(config.download_mask, folder_name, path)
+            html_page += '<a href="{0}/{1}{2}">Download Image</a>'.format(config.get('download_mask'), folder_name, path)
         else:
             for picture in pictures:
                 path = picture.replace(file_directory, '')
-                html_page += '<a href="{0}/{1}{2}">Download Image {3}</a>'.format(config.download_mask, folder_name,path,i)
+                html_page += '<a href="{0}/{1}{2}">Download Image {3}</a>'.format(config.get('download_mask'), folder_name,path,i)
                 i += 1
         i = 1
         if files:
             for file in files:
                 path = file.replace(file_directory, '')
-                html_page += '<a href="{0}/{1}{2}">Download File {3}</a>'.format(config.download_mask, folder_name,path,i)
+                html_page += '<a href="{0}/{1}{2}">Download File {3}</a>'.format(config.get('download_mask'), folder_name,path,i)
                 i += 1
         # Close download buttons
         html_page += "</div>"
