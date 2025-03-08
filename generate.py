@@ -73,6 +73,8 @@ def processFolder(file_directory, html_directory, web_root_directory, ytct_log=N
         ]
         
         table_html.append(templates.makePost(post, pictures, file_directory, web_root_directory, folder_name, files))
+
+        post['files'] = files
         
         if current % config.posts_per_page == 0 or idx == len(posts) - 1:
             print("Generating page {0}".format(page))
@@ -93,7 +95,7 @@ def processFolder(file_directory, html_directory, web_root_directory, ytct_log=N
     home_text = ""
     home_latest = ""
     home_posts = len(posts)
-    
+
     for post in posts:
         try:
             if post['author']['authorThumbnail']['thumbnails'][len(posts[0]['author']['authorThumbnail']['thumbnails'])-1]['url'] is not None and post['author']['authorText']['runs'][0]['text'] is not None and post['_published']['lastUpdatedTimestamp']:
