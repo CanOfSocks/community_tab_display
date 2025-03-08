@@ -22,24 +22,24 @@ def extract_runs(log_file):
     runs = []
     current_run = []
     inside_run = False  
-
-    with open(log_file, "r", encoding="utf-8") as file:
-        for line in file:
-            if "[ytct] loaded cookies" in line:
-                if current_run:
-                    runs.append(current_run)  # Append as is (no reversing)
-                current_run = []
-                inside_run = True
-            elif "[ytct] finished" in line:
-                if current_run:
-                    runs.append(current_run)  # Append as is (no reversing)
-                inside_run = False
-            elif inside_run:
-                match = post_pattern.search(line)
-                if match:
-                    post_id = match.group(1)
-                    if post_id not in current_run:  
-                        current_run.append(post_id)
+    if os.path.exists(log_file):
+        with open(log_file, "r", encoding="utf-8") as file:
+            for line in file:
+                if "[ytct] loaded cookies" in line:
+                    if current_run:
+                        runs.append(current_run)  # Append as is (no reversing)
+                    current_run = []
+                    inside_run = True
+                elif "[ytct] finished" in line:
+                    if current_run:
+                        runs.append(current_run)  # Append as is (no reversing)
+                    inside_run = False
+                elif inside_run:
+                    match = post_pattern.search(line)
+                    if match:
+                        post_id = match.group(1)
+                        if post_id not in current_run:  
+                            current_run.append(post_id)
 
     if current_run:
         runs.append(current_run)  # Append last run as is
