@@ -7,9 +7,19 @@ from random import shuffle
 import templates
 import process_ytct_logs
 import order
+import rss
 
 with open('config.json', 'r') as f:
     config = json.load(f)
+
+latest_posts = []
+
+def sort_latest_posts(posts):
+    if config.get("rss_feed_amount", 0) > 0:
+        latest_posts.append(posts)
+        latest_posts.sort(key=lambda x: x['_published']['lastUpdatedTimestamp'], reverse=True)
+        latest_posts = latest_posts[:config.get("rss_feed_amount")]
+
 
 def get_picture_files(path, post_ID):
     # Create a list to store all picture files
@@ -105,6 +115,7 @@ def processFolder(file_directory, html_directory, web_root_directory, ytct_log=N
                 break
         except:
             pass
+    sort_latest_posts(posts)
     return home_thumbnail, home_text, home_posts, home_latest       
     
 
@@ -134,6 +145,10 @@ def generateHTML(files_directory, html_directory, web_root_directory, ytct_log=N
     file = '{0}/index.html'.format(web_root_directory)
     with open(file, 'w', encoding='utf-8') as f:
         f.write(index_html)
+
+    if config.get("rss_feed_file", None) is not None and config.get("rss_feed_amount", 0) > 0:
+        rss.create_RSS
+
     print("Finished")
 
 def copyStyles(web_root_directory):
