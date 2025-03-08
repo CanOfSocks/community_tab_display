@@ -22,7 +22,7 @@ def extract_runs(log_file):
     runs = []
     current_run = []
     inside_run = False  
-    if os.path.exists(log_file):
+    if  os.path.exists(log_file):
         with open(log_file, "r", encoding="utf-8") as file:
             for line in file:
                 if "[ytct] loaded cookies" in line:
