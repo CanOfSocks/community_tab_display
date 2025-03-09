@@ -36,7 +36,7 @@ def create_RSS(posts, rss_file_path, root_dir, website_base_url="//"):
         channel_name = data.get("author", {}).get("authorText", {}).get("runs", [{}])[0].get("text", "")
         files = data.get("files", [])
         post_link = "{0}#{1}".format(
-                        urllib.parse.quote("{0}{1}/{2}.html".format(website_base_url, data.get('index', {}).get('path',""), data.get('index', {}).get('page',"")), safe=":/?=&"), 
+                        urllib.parse.quote("{0}posts/{1}/{2}.html".format(website_base_url, data.get('index', {}).get('path',""), data.get('index', {}).get('page',"")), safe=":/?=&"), 
                         data.get('index', {}).get('row',0)
                     )
 
