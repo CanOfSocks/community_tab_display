@@ -34,7 +34,7 @@ def create_RSS(posts, rss_file_path, root_dir, website_base_url="/"):
         channel_id = data.get("channel_id", "")
         channel_name = data.get("author", {}).get("authorText", {}).get("runs", [{}])[0].get("text", "")
         files = data.get("files", [])
-        post_link = "{0}/{1}/{2}.html#{3}".format(website_base_url, data.get('path',{}).get('path',""), data.get('path',{}).get('page',""), data.get('path',{}).get('row',0))
+        post_link = "{0}/{1}/{2}.html#{3}".format(website_base_url, data.get('index',{}).get('index',""), data.get('index',{}).get('page',""), data.get('index',{}).get('row',0))
 
         # Create an item for each post
         item = ET.SubElement(channel, "item")
