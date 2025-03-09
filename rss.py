@@ -39,6 +39,8 @@ def create_RSS(posts, rss_file_path, root_dir, website_base_url="//"):
                         urllib.parse.quote("{0}posts/{1}/{2}.html".format(website_base_url, data.get('index', {}).get('path',""), data.get('index', {}).get('page',"")), safe=":/?=&"), 
                         data.get('index', {}).get('row',0)
                     )
+        
+        timestamp = data.get("_published",{}).get("lastUpdatedTimestamp",0)
 
         # Create an item for each post
         item = ET.SubElement(channel, "item")
@@ -46,6 +48,7 @@ def create_RSS(posts, rss_file_path, root_dir, website_base_url="//"):
         ET.SubElement(item, "channel_id").text = channel_id
         ET.SubElement(item, "channel_name").text = channel_name
         ET.SubElement(item, "post_link").text = post_link
+        ET.SubElement(item, "timestamp").text = str(timestamp)
 
         # Add file locations
         for file_path in files:
