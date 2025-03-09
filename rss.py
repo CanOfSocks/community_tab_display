@@ -1,7 +1,14 @@
 import json
 import os
 import xml.etree.ElementTree as ET
+from xml.dom import minidom
 import mimetypes
+
+def prettify(elem):
+    """Return a pretty-printed XML string for the Element."""
+    rough_string = ET.tostring(elem, 'utf-8')
+    reparsed = minidom.parseString(rough_string)
+    return reparsed.toprettyxml(indent="  ")
 
 def create_RSS(posts, rss_file_path, root_dir, website_base_url=""):
     # Create RSS root
@@ -45,9 +52,11 @@ def create_RSS(posts, rss_file_path, root_dir, website_base_url=""):
 
     os.makedirs(os.path.dirname(rss_file_path), exist_ok=True)
     
-    tree = ET.ElementTree(rss) 
-      
-    with open (rss_file_path, "wb") as files : 
-        tree.write(files) 
+    # Pretty print the XML content
+    rss_content = prettify(rss)
+
+    # Save the RSS feed to a file with UTF-8 encoding
+    with open(rss_file_path, 'w', encoding='utf-8') as f:
+        f.write(rss_content)
 
     print(f"RSS feed generated: {rss_file_path}")
