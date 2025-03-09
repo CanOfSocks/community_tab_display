@@ -3,6 +3,7 @@ import os
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
 import mimetypes
+import urllib.parse
 
 def prettify(elem):
     """Return a pretty-printed XML string for the Element."""
@@ -10,7 +11,7 @@ def prettify(elem):
     reparsed = minidom.parseString(rough_string)
     return reparsed.toprettyxml()
 
-def create_RSS(posts, rss_file_path, root_dir, website_base_url="/"):
+def create_RSS(posts, rss_file_path, root_dir, website_base_url="//"):
     # Create RSS root
     rss = ET.Element("rss", version="2.0")
     channel = ET.SubElement(rss, "channel")
@@ -34,7 +35,7 @@ def create_RSS(posts, rss_file_path, root_dir, website_base_url="/"):
         channel_id = data.get("channel_id", "")
         channel_name = data.get("author", {}).get("authorText", {}).get("runs", [{}])[0].get("text", "")
         files = data.get("files", [])
-        post_link = "{0}/{1}/{2}.html#{3}".format(website_base_url, data.get('index',{}).get('index',""), data.get('index',{}).get('page',""), data.get('index',{}).get('row',0))
+        post_link = urllib.parse.urlencode("{0}{1}/{2}.html#{3}".format(website_base_url, data.get('index',{}).get('path',""), data.get('index',{}).get('page',""), data.get('path',{}).get('row',0)))
 
         # Create an item for each post
         item = ET.SubElement(channel, "item")
@@ -49,7 +50,7 @@ def create_RSS(posts, rss_file_path, root_dir, website_base_url="/"):
             file_path = file_path.replace(root_dir,website_base_url)
             if not mime_type:
                 mime_type = "application/octet-stream"  # Default if unknown
-            ET.SubElement(item, "file", type=mime_type).text = file_path
+            ET.SubElement(item, "file", type=mime_type).text = urllib.parse.urlencode(file_path)
 
 
     os.makedirs(os.path.dirname(rss_file_path), exist_ok=True)
