@@ -63,11 +63,11 @@ def writePage(table_html, pagination_html):
     
     return pretty_html(html_page)
 
-def makePost(info, pictures, file_directory, web_root_directory, folder_name, files=None):
+def makePost(info, pictures, file_directory, web_root_directory, folder_name, row, files=None):
     print("Processing post: {0}".format(info['post_id']))
 
     # Add timestamp variable to new row
-    html_page = '<tr data-timestamp="{0}"><td>'.format(info['_published']['lastUpdatedTimestamp'])
+    html_page = '<tr id="{1}" data-timestamp="{0}"><td>'.format(info['_published']['lastUpdatedTimestamp'], row)
     # Add header profile picture
     if info['author']['authorThumbnail'] is None:
         html_page += '<div class="post-header"><img src="" alt="Profile Picture">'

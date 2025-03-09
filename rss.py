@@ -8,9 +8,9 @@ def prettify(elem):
     """Return a pretty-printed XML string for the Element."""
     rough_string = ET.tostring(elem, 'utf-8')
     reparsed = minidom.parseString(rough_string)
-    return reparsed.toprettyxml(indent="  ")
+    return reparsed.toprettyxml()
 
-def create_RSS(posts, rss_file_path, root_dir, website_base_url=""):
+def create_RSS(posts, rss_file_path, root_dir, website_base_url="/"):
     # Create RSS root
     rss = ET.Element("rss", version="2.0")
     channel = ET.SubElement(rss, "channel")
@@ -34,12 +34,14 @@ def create_RSS(posts, rss_file_path, root_dir, website_base_url=""):
         channel_id = data.get("channel_id", "")
         channel_name = data.get("author", {}).get("authorText", {}).get("runs", [{}])[0].get("text", "")
         files = data.get("files", [])
+        post_link = "{0}/{1}/{2}.html#{3}".format(website_base_url, data.get('path',{}).get('path',""), data.get('path',{}).get('page',""), data.get('path',{}).get('row',0))
 
         # Create an item for each post
         item = ET.SubElement(channel, "item")
         ET.SubElement(item, "post_id").text = post_id
         ET.SubElement(item, "channel_id").text = channel_id
         ET.SubElement(item, "channel_name").text = channel_name
+        ET.SubElement(item, "post_link").text = post_link
 
         # Add file locations
         for file_path in files:

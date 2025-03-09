@@ -82,11 +82,19 @@ def processFolder(file_directory, html_directory, web_root_directory, ytct_log=N
             file for file in files 
             if file not in pictures and not file.endswith(post_id_json)
         ]
+
+        row = int(idx % config.get('posts_per_page'))
         
-        table_html.append(templates.makePost(post, pictures, file_directory, web_root_directory, folder_name, files))
+        table_html.append(templates.makePost(post=post, pictures=pictures, file_directory=file_directory, web_root_directory=web_root_directory, folder_name=folder_name, row=row, files=files))
 
         post['files'] = files
-        
+
+        post['index'] = {
+                'path': folder_name,
+                'page': page,
+                'row': row,
+            }
+            
         if current % config.get('posts_per_page') == 0 or idx == len(posts) - 1:
             print("Generating page {0}".format(page))
             pagination = templates.generatePagination(page, max_pages, html_directory, folder_name, web_root_directory)
