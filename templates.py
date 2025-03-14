@@ -108,7 +108,7 @@ def makePost(info, pictures, file_directory, web_root_directory, folder_name, ro
     
     # Add post footer
     if info['vote_count'] is not None:
-        html_page += '<div class="post-footer"><p>{0} likes</p><a href="//www.youtube.com/channel/UCL_qhgtOy0dy1Agp8vkySQg/community?lb={1}" target="_blank" rel="noopener noreferrer">{1}</a></div>'.format(info['vote_count']['simpleText'],info['post_id'])
+        html_page += '<div class="post-footer"><p>{0} likes</p><a href="//www.youtube.com/channel/{2}/community?lb={1}" target="_blank" rel="noopener noreferrer">{1}</a></div>'.format(info['vote_count']['simpleText'],info['post_id'], info.get('channel_id'))
     
     if config.get('download_mask'):
         #Create download buttons
