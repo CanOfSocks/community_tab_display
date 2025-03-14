@@ -23,6 +23,7 @@ def get_content(info):
                 content_text += 'https://youtube.com{0}'.format(run['navigationEndpoint'].get('commandMetadata').get('webCommandMetadata').get('url'))
             else:
                 content_text += ' {0}'.format(run['text'])
+    return content_text
 
 def create_RSS(posts, rss_file_path, root_dir, website_base_url="//"):
     # Create RSS root
