@@ -11,6 +11,18 @@ def prettify(elem):
     reparsed = minidom.parseString(rough_string)
     return reparsed.toprettyxml()
 
+def get_content(info):
+    if info.get('content_text') is not None and info['content_text'].get('runs') is not None:
+        for run in info['content_text']['runs']:
+            if run.get('urlEndpoint') is not None:
+                content_text += run['urlEndpoint'].get('url')
+            elif run.get('browseEndpoint') is not None:
+                content_text += 'https://youtube.com{0}'.format(run['browseEndpoint'].get('url'))
+            elif run.get('navigationEndpoint') is not None:
+                content_text += 'https://youtube.com{0}'.format(run['navigationEndpoint'].get('commandMetadata').get('webCommandMetadata').get('url'))
+            else:
+                content_text += ' {0}'.format(run['text'])
+
 def create_RSS(posts, rss_file_path, root_dir, website_base_url="//"):
     # Create RSS root
     rss = ET.Element("rss", version="2.0")
@@ -40,6 +52,8 @@ def create_RSS(posts, rss_file_path, root_dir, website_base_url="//"):
                         data.get('index', {}).get('row',0)
                     )
         
+        content = get_content(data)
+        
         timestamp = data.get("_published",{}).get("lastUpdatedTimestamp",0)
 
         # Create an item for each post
@@ -49,6 +63,7 @@ def create_RSS(posts, rss_file_path, root_dir, website_base_url="//"):
         ET.SubElement(item, "channel_name").text = channel_name
         ET.SubElement(item, "post_link").text = post_link
         ET.SubElement(item, "timestamp").text = str(timestamp)
+        ET.SubElement(item, "content").text = content
 
         # Add file locations
         for file_path in files:

@@ -18,8 +18,8 @@ def sort_latest_posts(posts):
     global latest_posts
     if config.get("rss_feed_amount", 0) > 0:
         latest_posts += posts
-        latest_posts = sorted(latest_posts, key=lambda x: x["_published"]["lastUpdatedTimestamp"], reverse=True)
-        latest_posts = latest_posts[:config.get("rss_feed_amount")]
+        sorted_posts = sorted(latest_posts, key=lambda x: x["_published"]["lastUpdatedTimestamp"], reverse=True)
+        latest_posts = sorted_posts[:config.get("rss_feed_amount")]
 
 
 def get_picture_files(path, post_ID):
