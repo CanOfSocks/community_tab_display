@@ -81,8 +81,8 @@ def main(log_file=None, json_file=None, clear_log=False, reverse=False):
         clear_log = args.clear_log
         reverse = args.reverse
 
-    existing_posts = load_existing_posts(json_file,reverse)  # Load existing order
-    new_runs = extract_runs(log_file)  # Extract new post IDs
+    existing_posts = load_existing_posts(json_file)  # Load existing order
+    new_runs = extract_runs(log_file, reverse)  # Extract new post IDs
     updated_posts = merge_posts(existing_posts, new_runs)  # Append new posts in correct order
     save_posts(updated_posts, json_file)  # Save back to JSON
 
