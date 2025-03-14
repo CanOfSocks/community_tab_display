@@ -9,5 +9,6 @@
     "clear_log": false,
     "base_url": "",
     "rss_feed_file": "/var/www/community/rss/rss.xml",
-    "rss_feed_amount": 100
+    "rss_feed_amount": 100,
+    "ytct_reverse": true
 }

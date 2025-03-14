@@ -45,7 +45,7 @@ def get_json_files(path):
     json_files = glob.glob(path + '/*.json')
     return json_files
 
-def processFolder(file_directory, html_directory, web_root_directory, ytct_log=None, sorted_posts=None, clear_log=False):
+def processFolder(file_directory, html_directory, web_root_directory, ytct_log=None, sorted_posts=None, clear_log=False, reverse_logs=False):
     print(f"Processing directory: {file_directory}")
     jsonFiles = get_json_files(file_directory)
     folder_name = os.path.basename(file_directory)
@@ -64,7 +64,7 @@ def processFolder(file_directory, html_directory, web_root_directory, ytct_log=N
     
     post_order = []
     if ytct_log is not None and sorted_posts is not None:
-        post_order = process_ytct_logs.main(log_file=os.path.join(file_directory, ytct_log), json_file=os.path.join(file_directory, sorted_posts))
+        post_order = process_ytct_logs.main(log_file=os.path.join(file_directory, ytct_log), json_file=os.path.join(file_directory, sorted_posts), reverse=reverse_logs)
 
     posts = order.sort_posts(posts=posts,sorted_array=post_order)
     
@@ -128,7 +128,7 @@ def processFolder(file_directory, html_directory, web_root_directory, ytct_log=N
     return home_thumbnail, home_text, home_posts, home_latest       
     
 
-def generateHTML(files_directory, html_directory, web_root_directory, ytct_log=None, sorted_posts=None, clear_log=False):
+def generateHTML(files_directory, html_directory, web_root_directory, ytct_log=None, sorted_posts=None, clear_log=False, reverse_logs=False):
     
     folders = []
     for root, dirs, files in os.walk(files_directory):
@@ -137,7 +137,7 @@ def generateHTML(files_directory, html_directory, web_root_directory, ytct_log=N
         print("Found {1} directories: {0}".format(dirs, len(dirs)))
         
         for dir in dirs:
-            thumbnail, channel, count, latest = processFolder(os.path.join(root, dir), html_directory, web_root_directory, ytct_log, sorted_posts, clear_log)
+            thumbnail, channel, count, latest = processFolder(os.path.join(root, dir), html_directory, web_root_directory, ytct_log, sorted_posts, clear_log, reverse_logs)
             info = {
                 "folder": dir.replace(web_root_directory, ''),
                 "thumbnail": thumbnail,
@@ -173,4 +173,4 @@ def copyStyles(web_root_directory):
 # Copy style files
 copyStyles(config.get('web_root_directory'))
 # Call the function with the path to your directory
-generateHTML(config.get('files_directory'), config.get('html_directory'), config.get('web_root_directory'), config.get('ytct_log'), config.get('sorted_posts'), config.get('clear_log', False))
+generateHTML(config.get('files_directory'), config.get('html_directory'), config.get('web_root_directory'), config.get('ytct_log'), config.get('sorted_posts'), config.get('clear_log', False), config.get('ytct_reverse', False))
