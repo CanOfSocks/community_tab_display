@@ -12,6 +12,7 @@ def prettify(elem):
     return reparsed.toprettyxml()
 
 def get_content(info):
+    content_text = ""
     if info.get('content_text') is not None and info['content_text'].get('runs') is not None:
         for run in info['content_text']['runs']:
             if run.get('urlEndpoint') is not None:
