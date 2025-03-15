@@ -4,6 +4,7 @@ import xml.etree.ElementTree as ET
 from xml.dom import minidom
 import mimetypes
 import urllib.parse
+import time
 
 def prettify(elem):
     """Return a pretty-printed XML string for the Element."""
@@ -34,6 +35,7 @@ def create_RSS(posts, rss_file_path, root_dir, website_base_url="//"):
     ET.SubElement(channel, "title").text = "YouTube Community Posts Feed"
     ET.SubElement(channel, "link").text = "https://www.youtube.com"
     ET.SubElement(channel, "description").text = "RSS Feed for multiple YouTube channels"
+    ET.SubElement(channel, "updated").text = int(time.time())
 
     # Process all JSON files in the directory
     for data in posts:
