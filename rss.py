@@ -65,8 +65,8 @@ def create_RSS(posts, rss_file_path, root_dir, website_base_url="//"):
         # Create an RSS item
         item = ET.SubElement(channel, "item")
         ET.SubElement(item, "title").text = channel_name  # Use channel name as title
-        ET.SubElement(item, "channel").text = channel_name
-        ET.SubElement(item, "channel_id").text = channel_id
+        ET.SubElement(item, "channel_id").text = channel_id  # Include channel ID
+        ET.SubElement(item, "link").text = post_link  # Post link
         ET.SubElement(item, "guid", isPermaLink="false").text = post_id  # Unique post ID
         ET.SubElement(item, "pubDate").text = pub_date
         ET.SubElement(item, "description").text = description  # Wrapped in CDATA
