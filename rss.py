@@ -59,8 +59,7 @@ def create_RSS(posts, rss_file_path, root_dir, website_base_url="//"):
         pub_date = formatdate(timestamp, usegmt=True) if timestamp else formatdate(time.time(), usegmt=True)
 
         # Get content safely wrapped in CDATA
-        content = get_content(data)
-        description = f"<![CDATA[{content}]]>"
+        description = get_content(data)
 
         # Create an RSS item
         item = ET.SubElement(channel, "item")
