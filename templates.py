@@ -26,7 +26,7 @@ def pretty_html(html_page):
     for tag, attribute in tags_and_attributes.items():
         for element in soup.find_all(tag, {attribute: True}):
             original_url = element[attribute]
-            encoded_url = quote(original_url, safe=':/')
+            encoded_url = quote(original_url, safe=':/?=')
             element[attribute] = encoded_url
 
     # Print the modified HTML
