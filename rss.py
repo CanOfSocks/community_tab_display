@@ -5,6 +5,7 @@ from xml.dom import minidom
 import mimetypes
 import urllib.parse
 import time
+from email.utils import formatdate
 
 def prettify(elem):
     """Return a pretty-printed XML string for the Element."""
@@ -35,56 +36,56 @@ def create_RSS(posts, rss_file_path, root_dir, website_base_url="//"):
     ET.SubElement(channel, "title").text = "YouTube Community Posts Feed"
     ET.SubElement(channel, "link").text = "https://www.youtube.com"
     ET.SubElement(channel, "description").text = "RSS Feed for multiple YouTube channels"
-    ET.SubElement(channel, "updated").text = str(int(time.time()))
+    ET.SubElement(channel, "lastBuildDate").text = formatdate(time.time(), usegmt=True)  # RFC-822 date format
 
-    # Process all JSON files in the directory
+    # Process all JSON posts
     for data in posts:
-
-        # Extract required fields
         post_id = data.get("post_id", "")
         channel_id = data.get("channel_id", "")
         channel_name = data.get("author", {}).get("authorText", {}).get("runs", [{}])[0].get("text", "")
         files = data.get("files", [])
+        timestamp = data.get("_published", {}).get("lastUpdatedTimestamp", 0)
 
-        # Extract required fields
-        post_id = data.get("post_id", "")
-        channel_id = data.get("channel_id", "")
-        channel_name = data.get("author", {}).get("authorText", {}).get("runs", [{}])[0].get("text", "")
-        files = data.get("files", [])
+        # Generate post link
         post_link = "{0}#{1}".format(
-                        urllib.parse.quote("{0}posts/{1}/{2}.html".format(website_base_url, data.get('index', {}).get('path',""), data.get('index', {}).get('page',"")), safe=":/?=&"), 
-                        data.get('index', {}).get('row',0)
-                    )
-        
+            urllib.parse.quote("{0}posts/{1}/{2}.html".format(
+                website_base_url, data.get('index', {}).get('path', ""),
+                data.get('index', {}).get('page', "")
+            ), safe=":/?=&"),
+            data.get('index', {}).get('row', 0)
+        )
+
+        # Convert timestamp to RFC-822 format
+        pub_date = formatdate(timestamp, usegmt=True) if timestamp else formatdate(time.time(), usegmt=True)
+
+        # Get content safely wrapped in CDATA
         content = get_content(data)
-        
-        timestamp = data.get("_published",{}).get("lastUpdatedTimestamp",0)
+        description = f"<![CDATA[{content}]]>"
 
-        # Create an item for each post
+        # Create an RSS item
         item = ET.SubElement(channel, "item")
-        ET.SubElement(item, "post_id").text = post_id
+        ET.SubElement(item, "title").text = channel_name  # Use channel name as title
+        ET.SubElement(item, "channel").text = channel_name
         ET.SubElement(item, "channel_id").text = channel_id
-        ET.SubElement(item, "channel_name").text = channel_name
-        ET.SubElement(item, "post_link").text = post_link
-        ET.SubElement(item, "timestamp").text = str(timestamp)
-        ET.SubElement(item, "content").text = content
+        ET.SubElement(item, "guid", isPermaLink="false").text = post_id  # Unique post ID
+        ET.SubElement(item, "pubDate").text = pub_date
+        ET.SubElement(item, "description").text = description  # Wrapped in CDATA
 
-        # Add file locations
+        # Add file attachments
         for file_path in files:
             mime_type, _ = mimetypes.guess_type(file_path)
-            file_path = file_path.replace(root_dir,website_base_url)
+            file_path = file_path.replace(root_dir, website_base_url)
             if not mime_type:
-                mime_type = "application/octet-stream"  # Default if unknown
-            ET.SubElement(item, "file", type=mime_type).text = urllib.parse.urlencode(file_path)
+                mime_type = "application/octet-stream"  # Default MIME type if unknown
+            ET.SubElement(item, "enclosure", type=mime_type, url=urllib.parse.quote(file_path, safe=":/?=&"))
 
-
+    # Ensure output directory exists
     os.makedirs(os.path.dirname(rss_file_path), exist_ok=True)
-    
-    # Pretty print the XML content
-    rss_content = prettify(rss)
 
-    # Save the RSS feed to a file with UTF-8 encoding
+    # Pretty print and save XML
+    rss_content = prettify(rss)  # Ensure this function properly formats XML
     with open(rss_file_path, 'w', encoding='utf-8') as f:
         f.write(rss_content)
 
     print(f"RSS feed generated: {rss_file_path}")
+
