@@ -78,6 +78,11 @@ def processFolder(file_directory, html_directory, web_root_directory, ytct_log=N
         files = get_extra_files(file_directory, post['post_id'])
         
         post_id_json = "{0}.json".format(post['post_id'])
+
+        post['files'] = [
+            file for file in files if not file.endswith(post_id_json)
+        ]
+
         files = [
             file for file in files 
             if file not in pictures and not file.endswith(post_id_json)
@@ -87,7 +92,7 @@ def processFolder(file_directory, html_directory, web_root_directory, ytct_log=N
         
         table_html.append(templates.makePost(info=post, pictures=pictures, file_directory=file_directory, web_root_directory=web_root_directory, folder_name=folder_name, row=row, files=files))
 
-        post['files'] = files
+        
 
         post['index'] = {
                 'path': folder_name,
