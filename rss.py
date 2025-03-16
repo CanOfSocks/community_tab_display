@@ -35,7 +35,7 @@ def create_RSS(posts, rss_file_path, root_dir, website_base_url="//"):
     ET.SubElement(channel, "title").text = "YouTube Community Posts Feed"
     ET.SubElement(channel, "link").text = "https://www.youtube.com"
     ET.SubElement(channel, "description").text = "RSS Feed for multiple YouTube channels"
-    ET.SubElement(channel, "updated").text = int(time.time())
+    ET.SubElement(channel, "updated").text = str(int(time.time()))
 
     # Process all JSON files in the directory
     for data in posts:
