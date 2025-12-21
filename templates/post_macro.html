@@ -1,0 +1,60 @@
+{% macro render_post(post) %}
+<tr data-timestamp="{{ post.timestamp.timestamp() }}">
+    <td>
+        <div class="post-header">
+            <img src="{{ post.profile_pic_url or '' }}" alt="Profile Picture">
+            
+            <div>
+                <h3>
+                    <a href="//www.youtube.com/channel/{{ post.channel_id }}" target="_blank" rel="noopener noreferrer" class="link-block">
+                        {{ post.channel_name }}
+                    </a>
+                </h3>
+                
+                {% if post.is_members_only %}
+                    <p><i>Members only</i></p>
+                {% endif %}
+                
+                <p><small><a href="{{ url_for('single_post', post_id=post.post_id) }}" style="color: #888;" target="_blank">View Post ID: {{ post.post_id }}</a></small></p>
+            </div>
+        </div>
+
+        <div class="post-content">
+            {% for block in post.content_blocks %}
+                <p>
+                    {% if block.link_url %}
+                        <a href="{{ block.link_url }}" target="_blank" rel="noopener noreferrer" class="link-block">
+                            {{ block.text_content }}
+                        </a>
+                    {% else %}
+                        {{ block.text_content }}
+                    {% endif %}
+                </p>
+            {% endfor %}
+
+            {% for attach in post.attachments %}
+                {% if attach.file_type in ['jpg', 'jpeg', 'png', 'gif', 'webp'] %}
+                    <img src="/{{ attach.file_path.lstrip('/') | quote_url }}" alt="Attachment" loading="lazy">
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <div class="post-footer">
+            <p>{{ post.likes_count }} likes</p>
+            <p><a href="//www.youtube.com/post/{{ post.post_id }}" target="_blank" rel="noopener noreferrer" class="link-block">{{ post.post_id }}</a></p>
+        </div>
+
+        <div class="download-buttons">
+            {% for type, group in post.attachments|groupby('file_type') %}
+                {% for attach in group %}
+                    <a href="/{{ attach.file_path.lstrip('/') | quote_url }}?download=true">
+                        Download 
+                        {{ (type|capitalize if type else 'File') }} 
+                        {% if group|length > 1 %}{{ loop.index }}{% endif %}
+                    </a>
+                {% endfor %}
+            {% endfor %}
+        </div>
+    </td>
+</tr>
+{% endmacro %}

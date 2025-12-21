@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    {% for author in authors %}
+    <tr data-timestamp="{{ author.timestamp.timestamp() }}">
+        <td>
+            <div class="post-header">
+                <img src="{{ author.profile_pic_url or '' }}" alt="Profile Picture">
+                <div>
+                    <h3>
+                        <a href="{{ url_for('channel_page', channel_id=author.channel_id) }}" style="color: white; text-decoration: none;">
+                            {{ author.channel_name }}
+                        </a>
+                    </h3>
+                    <p style="color: #888; margin: 0;">{{ author.post_count }} posts</p>
+                    
+                    <p style="color: #888; margin: 0;"><i>Last update: </i></p>
+                </div>
+            </div>
+        </td>
+    </tr>
+    {% endfor %}
+{% endblock %}

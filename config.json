@@ -1,14 +1,4 @@
 {
-    "files_directory" : "/var/www/community/files",
-    "html_directory" : "/var/www/community/posts",
-    "web_root_directory" : "/var/www/community/",
-    "posts_per_page" : 20,
-    "download_mask" : "/dl/files",
-    "ytct_log" : "log.txt",
-    "sorted_posts" : "sorted.json",
-    "clear_log": false,
-    "base_url": "",
-    "rss_feed_file": "/var/www/community/rss/rss.xml",
-    "rss_feed_amount": 100,
-    "ytct_reverse": true
+    "post_root" : "Y:\\CommunityPosts",
+    "web_root" : "/files"
 }

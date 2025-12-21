@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Community Archive{% endblock %}</title>
+    <link rel="stylesheet" type="text/css" href="/style.css">
+</head>
+<body>
+    <div class="home-button">
+        <a href="/">Home</a>
+    </div>
+    
+    <div class="container">
+        <table>
+            {% block content %}{% endblock %}
+        </table>
+        
+        <div class="clearfix"></div>
+        
+        {% block pagination %}{% endblock %}
+    </div>
+
+    <script src="/script.js"></script>
+</body>
+</html>

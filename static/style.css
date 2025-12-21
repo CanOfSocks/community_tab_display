@@ -1,0 +1,109 @@
+body {
+    background-color: #181818;
+    color: white;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+}
+.container {
+    width: 100%;
+    max-width: 1280px;
+}
+table {
+    width: 100%;
+}
+td {
+    border: 2px solid #333;
+    padding: 20px;
+    border-radius: 10px;
+}
+
+.post-header {
+    display: flex;
+    align-items: center;
+	border-bottom: 1px dashed #333;
+}
+.post-header img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+.post-content {
+    margin-top: 10px;
+    margin-left: 60px;
+}
+.post-content img {
+    max-width: 100%;
+    height: auto;
+}
+.post-footer {
+    margin-top: 10px;
+    color: #888;
+    margin-left: 60px;
+}
+.download-buttons {
+    margin-top: 10px;
+    margin-left: 60px;
+}
+.download-buttons a {
+    display: inline-block;
+    background-color: #333;
+    color: white;
+    text-decoration: none;
+    padding: 5px 10px;
+    margin-right: 10px;
+    border-radius: 5px;
+}
+.pagination {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+	margin-left: 50px;
+	margin-right: 50px;
+}
+.pagination a {
+    color: white;
+    text-decoration: none;
+}
+.home-button {
+	position: absolute;
+	top: 10px;
+	left: 10px;
+}
+.home-button a {
+	display: inline-block;
+	background-color: #333;
+	color: white;
+	text-decoration: none;
+	padding: 5px 10px;
+	border-radius: 5px;
+}
+
+/* Base style for the link */
+.link-block {
+    color: #4da6ff;
+    text-decoration: none; /* Removes default underline */
+    transition: color 0.3s ease, opacity 0.3s ease; /* Smooth transition */
+    font-weight: 500;
+}
+
+/* Hover state: Link gets slightly darker or underlined */
+.link-block:hover {
+    color: #3580cc; 
+    text-decoration: underline;
+}
+
+/* Active state: When the link is clicked */
+.link-block:active {
+    opacity: 0.7;
+}
+
+/* Visited state: Optional, if you want it to stay the same color after clicking */
+.link-block:visited {
+    color: #4da6ff;
+}
+
+html {
+    scroll-behavior: smooth;
+}

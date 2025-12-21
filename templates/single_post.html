@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% from 'post_macro.html' import render_post %}
+
+{% block title %}Post {{ post.post_id }}{% endblock %}
+
+{% block content %}
+    {{ render_post(post) }}
+{% endblock %}

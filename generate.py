@@ -1,18 +1,21 @@
-import os
-import shutil
+
 import glob
 import json
-import math
-from random import shuffle
-import templates
-import process_ytct_logs
-import order
-import rss
+from pathlib import Path
+import database
+import os
+import posixpath
 
-with open('config.json', 'r') as f:
-    config = json.load(f)
+from pathlib import Path
+import argparse
+
+import logging
+
+config = {}
 
 latest_posts = []
+
+existing = set()
 
 def sort_latest_posts(posts):
     global latest_posts
@@ -22,160 +25,118 @@ def sort_latest_posts(posts):
         latest_posts = sorted_posts[:config.get("rss_feed_amount")]
 
 
-def get_picture_files(path, post_ID):
-    # Create a list to store all picture files
-    picture_files = []
+def get_relative_to_web_root(files_path, web_root):
+    """
+    Returns the path of files_path relative to web_root, 
+    formatted as a web-standard POSIX path with a leading slash.
+    """
+    # 1. Resolve to absolute paths to ensure the comparison is accurate
+    p = Path(files_path).resolve()
+    root = Path(config.get("post_root")).resolve()
+    
+    try:
+        # 2. Get the relative portion
+        relative = p.relative_to(root)
+        
+        # 3. Use posixpath.join and .as_posix() for clean formatting.
+        # posixpath.normpath ensures that if relative is ".", it returns "/"
+        web_path = posixpath.join(config.get("web_root"), relative.as_posix())
+        return posixpath.normpath(web_path)
+        
+    except ValueError:
+        # Case: files_path is not under web_root. 
+        # Returns absolute POSIX path (e.g., C:/temp or /var/log)
+        return p.as_posix()
 
-    # List of picture extensions
+def get_picture_files(path, post_ID, web_root):
+    """
+    Returns a list of picture files (png, jpg, jpeg, gif)
+    relative to the web root.
+    """
+    picture_files = []
     extensions = ['png', 'jpg', 'jpeg', 'gif']
 
-    # Use glob to match the pattern 'variable*.extension'
     for ext in extensions:
-        picture_files.extend(glob.glob(f"{path}/{post_ID}*.{ext}"))
-
+        for f in glob.glob(f"{path}/{post_ID}*.{ext}"):
+            picture_files.append(get_relative_to_web_root(f, web_root))
+    
     return picture_files
 
-def get_extra_files(path, post_ID):
-    files = glob.glob(f"{path}/{post_ID}*")
-    #print(files)
+def get_extra_files(path, post_ID, web_root):
+    """
+    Returns a list of all files matching post_ID* relative to the web root.
+    """
+    files = []
+    for f in glob.glob(f"{path}/{post_ID}*"):
+        files.append(get_relative_to_web_root(f, web_root))
     return files
 
-def get_json_files(path):
-    # Use glob to match the pattern '/*.json'
-    json_files = glob.glob(path + '/*.json')
+def get_json_files(path, web_root):
+    """
+    Returns a list of all JSON files in a path relative to the web root.
+    """
+    json_files = []
+    for f in glob.glob(f"{path}/*.json"):
+        json_files.append(get_relative_to_web_root(f, web_root))
     return json_files
 
-def processFolder(file_directory, html_directory, web_root_directory, ytct_log=None, sorted_posts=None, clear_log=False, reverse_logs=False):
-    print(f"Processing directory: {file_directory}")
-    jsonFiles = get_json_files(file_directory)
-    folder_name = os.path.basename(file_directory)
-    posts = []
-    for file in jsonFiles:
-        # Add posts to array, ignore if loaded json does not have post_id field
-        try:
-            with open(file, 'r', encoding='utf-8') as f:
-                post = json.load(f)
-                if post.get("post_id", None) is None:
-                    continue
-                posts.append(post)
 
+def process_file(file):
+    
+    post = {}
+    with open(file, 'r', encoding='utf-8') as f:
+        post = json.load(f)
+        if isinstance(post, list):
+            logging.warning("Post is list (possibly sorted list?) returning...")
+            return
+        if post.get("post_id", None) is None:
+            raise ValueError("unable to find post id, JSON is not valid")
+        
+    if existing and post.get("post_id") in existing:
+        return
+        
+    json_files = [get_relative_to_web_root(file, config.get("web_root"))]
+
+    picture_files = get_picture_files(path=os.path.dirname(file), post_ID=post.get("post_id"), web_root=config.get("web_root"))
+
+    extra_files = get_extra_files(path=os.path.dirname(file), post_ID=post.get("post_id"), web_root=config.get("web_root"))
+
+    extra_files = list(set(extra_files) - set(json_files) - set(picture_files))
+
+    database.store_post(info=post, pictures=picture_files, json_files=json_files, files=extra_files)
+
+def main(config_file="", ignore_existing=False):
+    if not config_file:
+        raise ValueError("No config file specified")
+    global config
+    with open(config_file, 'r', encoding="utf-8") as f:
+        config = json.load(f)
+    # Set the root directory
+    root_dir = Path(config.get("post_root"))
+
+    # Recursively find all .json files
+    json_files = list(root_dir.rglob('*.json'))
+
+    if ignore_existing:
+        global existing
+        existing = database.get_existing_posts()
+
+    logging.info("Found {0} posts".format(len(json_files)))
+    for file in json_files:
+        try:
+            process_file(file)
         except Exception as e:
-            print(e)
+            logging.exception("Error occurred processing json: {0} - {1}".format(file, e))
+
+if __name__ == "__main__":
+    # Create the parser
+    parser = argparse.ArgumentParser(description="Loader")
+
+    parser.add_argument('config', type=str, default="config.json", help='Config File Location')
+
+    parser.add_argument('--skip-existing', action='store_true', help="Skip posts existing in database")
     
-    post_order = []
-    if ytct_log is not None and sorted_posts is not None:
-        post_order = process_ytct_logs.main(log_file=os.path.join(file_directory, ytct_log), json_file=os.path.join(file_directory, sorted_posts), reverse=reverse_logs)
+    # Parse the arguments
+    args = parser.parse_args()
 
-    posts = order.sort_posts(posts=posts,sorted_array=post_order)
-    
-    page = 1
-    current = 1
-    table_html = []
-    max_pages = int(math.ceil(float(len(posts))/config.get('posts_per_page')))
-       
-    for idx, post in enumerate(posts):
-        pictures = get_picture_files(file_directory, post['post_id'])
-        files = get_extra_files(file_directory, post['post_id'])
-        
-        post_id_json = "{0}.json".format(post['post_id'])
-
-        post['files'] = [
-            file for file in files if not file.endswith(post_id_json)
-        ]
-
-        files = [
-            file for file in files 
-            if file not in pictures and not file.endswith(post_id_json)
-        ]
-
-        row = int(idx % config.get('posts_per_page'))
-        
-        table_html.append(templates.makePost(info=post, pictures=pictures, file_directory=file_directory, web_root_directory=web_root_directory, folder_name=folder_name, row=row, files=files))
-
-        
-
-        post['index'] = {
-                'path': folder_name,
-                'page': page,
-                'row': row,
-            }
-            
-        if current % config.get('posts_per_page') == 0 or idx == len(posts) - 1:
-            print("Generating page {0}".format(page))
-            pagination = templates.generatePagination(page, max_pages, html_directory, folder_name, web_root_directory)
-            page_html = templates.writePage(table_html, pagination)
-            
-            html_folder = os.path.join(html_directory, folder_name)
-            os.makedirs(html_folder, exist_ok=True)
-            file = os.path.join(html_folder, "{0}.html".format(page))
-            with open(file, 'w', encoding='utf-8') as f:
-                f.write(page_html)
-            page += 1
-            current = 1
-            table_html = []
-        current += 1
-        
-    home_thumbnail = ""
-    home_text = ""
-    home_latest = ""
-    home_posts = len(posts)
-
-    for post in posts:
-        try:
-            if post['author']['authorThumbnail']['thumbnails'][len(posts[0]['author']['authorThumbnail']['thumbnails'])-1]['url'] is not None and post['author']['authorText']['runs'][0]['text'] is not None and post['_published']['lastUpdatedTimestamp']:
-                home_thumbnail = post['author']['authorThumbnail']['thumbnails'][len(posts[0]['author']['authorThumbnail']['thumbnails'])-1]['url']
-                home_text = post['author']['authorText']['runs'][0]['text']
-                home_latest = post['_published']['lastUpdatedTimestamp']
-                break
-        except:
-            pass
-    sort_latest_posts(posts)
-    return home_thumbnail, home_text, home_posts, home_latest       
-    
-
-def generateHTML(files_directory, html_directory, web_root_directory, ytct_log=None, sorted_posts=None, clear_log=False, reverse_logs=False):
-    
-    folders = []
-    for root, dirs, files in os.walk(files_directory):
-        #Shuffle directiories for testing
-        #shuffle(dirs)
-        print("Found {1} directories: {0}".format(dirs, len(dirs)))
-        
-        for dir in dirs:
-            thumbnail, channel, count, latest = processFolder(os.path.join(root, dir), html_directory, web_root_directory, ytct_log, sorted_posts, clear_log, reverse_logs)
-            info = {
-                "folder": dir.replace(web_root_directory, ''),
-                "thumbnail": thumbnail,
-                "channel": channel,
-                "count": count,
-                "latest": latest
-            }
-            folders.append(info)
-            
-    print("Generating index page")
-    
-    folders = sorted(folders, key=lambda x: x['folder'])
-    index_html = templates.makeIndex(folders, html_directory, web_root_directory)
-    file = '{0}/index.html'.format(web_root_directory)
-    with open(file, 'w', encoding='utf-8') as f:
-        f.write(index_html)
-
-    if config.get("rss_feed_file", None) is not None and config.get("rss_feed_amount", 0) > 0:
-        print("Creating RSS feed")
-        rss.create_RSS(latest_posts, config.get("rss_feed_file"), config.get('web_root_directory'), website_base_url=config.get('base_url'))
-
-    print("Finished")
-
-def copyStyles(web_root_directory):
-    script_file = os.path.abspath('./script.js')
-    script_html = "{0}/script.js".format(web_root_directory)
-    shutil.copyfile(script_file, script_html)
-    
-    script_file = os.path.abspath('./styles.css')
-    script_html = "{0}/styles.css".format(web_root_directory)
-    shutil.copyfile(script_file, script_html)
-
-# Copy style files
-copyStyles(config.get('web_root_directory'))
-# Call the function with the path to your directory
-generateHTML(config.get('files_directory'), config.get('html_directory'), config.get('web_root_directory'), config.get('ytct_log'), config.get('sorted_posts'), config.get('clear_log', False), config.get('ytct_reverse', False))
+    main(config_file=args.config, ignore_existing=args.skip_existing)

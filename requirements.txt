@@ -1,1 +1,6 @@
-beautifulsoup4>=4.12.2
+flask
+flask-sqlalchemy
+flask-caching
+flask-compress
+sqlalchemy
+mysql-connector-python
