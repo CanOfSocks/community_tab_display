@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, abort, make_response, send_from_directory, make_response
+from flask import Flask, render_template, request, abort, make_response, send_from_directory, make_response, Response
 from flask_sqlalchemy import SQLAlchemy
 from flask_caching import Cache
 from flask_compress import Compress
@@ -154,6 +154,41 @@ def favicon():
     response = make_response(send_from_directory('static', 'favicon.ico'))
     response.headers['Cache-Control'] = 'public, max-age=3600, must-revalidate'
     return response
+
+
+from email import utils
+import mimetypes
+
+@app.template_filter('get_mime_type')
+def get_mime_type(path: str) -> str:
+    mime_type, _ = mimetypes.guess_file_type(path)
+    return mime_type or "application/octet-stream"
+
+@app.route('/rss/rss.xml')
+@cache.cached(timeout=1800)
+def rss_feed():
+    posts = (
+        db.session.query(CommunityPost)
+        .order_by(desc(CommunityPost.timestamp))
+        .limit(100)
+        .all()
+    )
+
+    last_build_date = (
+        utils.format_datetime(posts[0].timestamp)
+        if posts else
+        utils.format_datetime(datetime.now())
+    )
+
+    xml_body = render_template(
+        'rss.xml',
+        posts=posts,
+        last_build_date=last_build_date,
+        format_date=utils.format_datetime,
+        get_mime_type=get_mime_type
+    )
+
+    return add_cache_headers(Response(xml_body, mimetype="application/rss+xml"))
 
 @app.template_filter('quote_url')
 def quote_url(url):

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+<channel>
+    <title>YouTube Community Posts Feed</title>
+    <link>{{ url_for('index', _external=True) }}</link>
+    <description>RSS Feed for multiple YouTube channels</description>
+    <lastBuildDate>{{ last_build_date }}</lastBuildDate>
+    
+    {% for post in posts %}
+    <item>
+        <title>{{ post.channel_name }}</title>
+        <channel_id>{{ post.channel_id }}</channel_id>
+        
+        <link>{{ url_for('single_post', post_id=post.post_id, _external=True) }}</link>
+        
+        <guid isPermaLink="false">{{ post.post_id }}</guid>
+        
+        <pubDate>{{ format_date(post.timestamp) }}</pubDate>
+        
+        <description>
+            <![CDATA[
+            {%- for block in post.content_blocks -%}
+                {{ block.text_content }}
+                {%- if not loop.last -%}<br>{%- endif -%}
+            {%- endfor -%}
+            ]]>
+        </description>
+        
+        {# Handle attachments (images or Zips) #}
+        {% for attach in post.attachments %}
+            {# Only create the tag if a file path exists #}
+            {% if attach.file_path %}
+                <enclosure type="{{ get_mime_type(attach.file_path) }}" 
+                           url="{{ url_for('static', filename=attach.file_path.lstrip('/'), _external=True) }}" />
+            {% endif %}
+        {% endfor %}
+    </item>
+    {% endfor %}
+
+</channel>
+</rss>
