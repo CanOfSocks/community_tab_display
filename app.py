@@ -75,7 +75,7 @@ def index():
     ).join(
         count_sub,
         CommunityPost.channel_id == count_sub.c.channel_id
-    ).order_by(desc(CommunityPost.timestamp)).all()
+    ).distinct(CommunityPost.channel_id).order_by(desc(CommunityPost.timestamp)).all()
 
     
     response = make_response(render_template('index.html', authors=authors))
