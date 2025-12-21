@@ -162,7 +162,4 @@ def quote_url(url):
     return urllib.parse.quote(url, safe='/')
 
 if __name__ == '__main__':
-    # Ensure tables exist
-    with app.app_context():
-        db.create_all()
-    app.run(debug=True)
+    app.run(debug=True, port=os.getenv("FLASK_RUN_PORT", 5000))

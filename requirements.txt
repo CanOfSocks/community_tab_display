@@ -4,3 +4,4 @@ flask-caching
 flask-compress
 sqlalchemy
 mysql-connector-python
+python-dotenv
