@@ -149,6 +149,12 @@ def serve_js():
     response.headers['Cache-Control'] = 'public, max-age=3600, must-revalidate'
     return response
 
+@app.route('/favicon.ico')
+def favicon():
+    response = make_response(send_from_directory('static', 'favicon.ico'))
+    response.headers['Cache-Control'] = 'public, max-age=3600, must-revalidate'
+    return response
+
 @app.template_filter('quote_url')
 def quote_url(url):
     if not url:
