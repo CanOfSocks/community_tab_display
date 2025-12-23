@@ -36,7 +36,7 @@ jobs:
         with:
           images: |
             canofsocks/community-tab-display
-            ghcr.io/canofsocks/community-tab-display
+          #  ghcr.io/canofsocks/community-tab-display
           tags: |
             type=edge,branch=main
             type=raw,value=latest
