@@ -8,4 +8,6 @@ COPY . .
 RUN pip install --no-cache-dir -r /app/requirements.txt
 RUN pip install --no-cache-dir gunicorn
 
-ENTRYPOINT [ "sh", "-c", "/app/startCron.sh" ]
+RUN chmod +x /app/run.sh
+
+ENTRYPOINT [ "sh", "-c", "/app/run.sh" ]
