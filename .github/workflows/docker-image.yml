@@ -23,12 +23,12 @@ jobs:
           username: canofsocks
           password: ${{ secrets.DOCKER_TOKEN }}
           
-      - name: Log into GHCR
-        uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+      #- name: Log into GHCR
+      #  uses: docker/login-action@v2
+      #  with:
+      #    registry: ghcr.io
+      #    username: ${{ github.repository_owner }}
+      #    password: ${{ secrets.GITHUB_TOKEN }}
           
       - name: Docker create tag meta
         id: meta
