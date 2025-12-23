@@ -63,7 +63,7 @@ def index():
     # Main Query: Join CommunityPost with the subqueries to get full details of the latest post
     # We join on channel_id AND timestamp to get the specific row that is the "latest"
     authors = db.session.query(
-        func.distinct(CommunityPost.channel_id),
+        func.distinct(CommunityPost.channel_id).label('channel_id'),
         CommunityPost.channel_name,
         CommunityPost.profile_pic_url,
         CommunityPost.timestamp,
@@ -77,7 +77,6 @@ def index():
         CommunityPost.channel_id == count_sub.c.channel_id
     ).order_by(desc(CommunityPost.timestamp)).all()
 
-    
     response = make_response(render_template('index.html', authors=authors))
     return add_cache_headers(response)
 
