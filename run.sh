@@ -1,4 +1,6 @@
 #!/bin/sh
+set -e
+
 exec gunicorn \
   -w ${GUNICORN_WORKERS:-4} \
   -b ${GUNICORN_BIND:-0.0.0.0:9000} \
