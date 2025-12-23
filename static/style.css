@@ -8,6 +8,10 @@ body {
 .container {
     width: 100%;
     max-width: 1280px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 table {
     width: 100%;
@@ -16,6 +20,11 @@ td {
     border: 2px solid #333;
     padding: 20px;
     border-radius: 10px;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
 }
 
 .post-header {
