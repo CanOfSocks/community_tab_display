@@ -134,12 +134,12 @@ def store_post(info:dict , pictures=[], files=[], json_files=[]):
         
         
         # Safe Like Conversion
-        likes_text = info.get('vote_count', {}).get('simpleText', None)
+        likes_text = (info.get('vote_count', {}) or {}).get('simpleText', None)
         likes = parse_shorthand(likes_text.replace(',', '')) if likes_text else 0
         
         # Timestamp
-        ts = info.get('_published', {}).get('lastUpdatedTimestamp')
-        timestamp = datetime.fromtimestamp(int(ts)) if ts else datetime.utcnow()
+        ts = (info.get('_published', {}) or {}).get('lastUpdatedTimestamp')
+        timestamp = datetime.fromtimestamp(int(ts)) if ts else datetime.now(datetime.timezone.utc)
 
         # --- 2. Insert Parent (INSERT IGNORE) ---
         post_values = {
