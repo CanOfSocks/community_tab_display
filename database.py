@@ -109,26 +109,26 @@ def store_post(info:dict , pictures=[], files=[], json_files=[]):
     # --- 1. Extract Metadata (Same as your original logic) ---
     try:
         # Safely navigate to the last thumbnail URL
-        author_thumb = info.get('author', {}) \
-                        .get('authorThumbnail', {}) \
+        author_thumb = (info.get('author', {}) \
+                        .get('authorThumbnail', {}) or {} ) \
                         .get('thumbnails', [{}])[-1] \
-                        .get('url') \
+                        .get('url', None) \
                         or \
-                        info.get("original_post") \
+                        (info.get("original_post") \
                         .get('author', {}) \
-                        .get('authorThumbnail', {}) \
+                        .get('authorThumbnail', {}) or {} ) \
                         .get('thumbnails', [{}])[-1] \
                         .get('url')
 
         # Safely navigate to the channel name text
-        chan_name = info.get('author', {}) \
-                        .get('authorText', {}) \
+        chan_name = (info.get('author', {}) \
+                        .get('authorText', {}) or {} ) \
                         .get('runs', [{}])[0] \
                         .get('text', None) \
                         or \
-                        info.get("original_post") \
+                        (info.get("original_post") \
                         .get('author', {}) \
-                        .get('authorText', {}) \
+                        .get('authorText', {}) or {} ) \
                         .get('runs', [{}])[0] \
                         .get('text', 'Unknown')
         
