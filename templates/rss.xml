@@ -20,7 +20,7 @@
         <description>
             <![CDATA[
             {%- for block in post.content_blocks -%}
-                {{ block.link_url or block.text_content }}
+                {{  (block.link_url or block.text_content) | safe  }}
                 {%- if not loop.last -%}{{ "\n" }}{%- endif -%}
             {%- endfor -%}
             ]]>
