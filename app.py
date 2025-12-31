@@ -22,6 +22,10 @@ load_dotenv()
 # Update URI to your actual database
 app.config['SQLALCHEMY_DATABASE_URI']  = os.getenv('DATABASE_URL') 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'pool_pre_ping': True,
+    'pool_recycle': 280,  # Recycle connections before the DB timeout (usually 300s)
+}
 
 # Cache Config (Simple in-memory cache for demonstration)
 # For production, use 'redis' or 'memcached'
