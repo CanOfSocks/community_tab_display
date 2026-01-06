@@ -35,6 +35,8 @@ app.config['CACHE_DEFAULT_TIMEOUT'] = 1800  # 30 minutes server-side default
 # Init extensions
 db = SQLAlchemy(app, model_class=Base)
 cache = Cache(app)
+
+app.config['COMPRESS_MIN_SIZE'] = 5000
 Compress(app)
 
 # --- Helper to add Cache-Control headers ---
