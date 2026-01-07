@@ -215,18 +215,14 @@ def store_post(info:dict , pictures=[], files=[], json_files=[]):
         # --- 3. Insert Content Blocks (INSERT IGNORE) ---
         if info.get('content_text', {}).get('runs'):
             block_list = []
-            for run in info['content_text']['runs']:
+            # Use enumerate to create the block_index automatically
+            for i, run in enumerate(info['content_text']['runs']):
                 url = None
-                if run.get('urlEndpoint'):
-                    url = run['urlEndpoint'].get('url')
-                elif run.get('browseEndpoint'):
-                    url = "https://youtube.com" + run['browseEndpoint'].get('url', '')
-                elif run.get('navigationEndpoint'):
-                    cmd_meta = run.get('navigationEndpoint', {}).get('commandMetadata', {}).get('webCommandMetadata', {})
-                    if cmd_meta.get('url'):
-                        url = "https://youtube.com" + cmd_meta['url']
+                # ... (your existing URL extraction logic) ...
+                
                 block_list.append({
-                    "post_id": post_id, # Manual Foreign Key
+                    "post_id": post_id,
+                    "block_index": i,  # Adding the enumeration here
                     "text_content": run.get('text', ''),
                     "link_url": url 
                 })
