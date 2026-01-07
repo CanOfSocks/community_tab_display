@@ -1,10 +1,10 @@
 from datetime import datetime
 from sqlalchemy import (
-    create_engine, Column, String, Text, Integer, Boolean, DateTime, ForeignKey, select, Index, UniqueConstraint
+    create_engine, Column, String, Text, Integer, Boolean, DateTime, ForeignKey, select, Index 
 )
-from sqlalchemy.orm import relationship, sessionmaker, scoped_session
+from sqlalchemy.orm import relationship, sessionmaker 
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.exc import IntegrityError
+
 from sqlalchemy.dialects.mysql import insert
 import re
 import logging
@@ -123,7 +123,6 @@ class PostContentBlock(Base):
         {
             'mysql_engine': 'InnoDB',
             'mysql_charset': 'utf8mb4',
-            'mysql_collate': 'utf8mb4_unicode_ci'
         }
     )
 
@@ -217,7 +216,14 @@ def store_post(info:dict , pictures=[], files=[], json_files=[]):
             # Use enumerate to create the block_index automatically
             for i, run in enumerate(info['content_text']['runs']):
                 url = None
-                # ... (your existing URL extraction logic) ...
+                if run.get('urlEndpoint'):
+                    url = run['urlEndpoint'].get('url')
+                elif run.get('browseEndpoint'):
+                    url = "https://youtube.com" + run['browseEndpoint'].get('url', '')
+                elif run.get('navigationEndpoint'):
+                    cmd_meta = run.get('navigationEndpoint', {}).get('commandMetadata', {}).get('webCommandMetadata', {})
+                    if cmd_meta.get('url'):
+                        url = "https://youtube.com" + cmd_meta['url']
                 
                 block_list.append({
                     "post_id": post_id,
