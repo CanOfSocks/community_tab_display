@@ -40,10 +40,14 @@ app.config['COMPRESS_MIN_SIZE'] = 5000
 Compress(app)
 
 # --- Helper to add Cache-Control headers ---
-def add_cache_headers(response, max_age=3600):
-    """Adds client-side caching headers (60 minutes)."""
-    response.headers['Cache-Control'] = f'public, max_age={max_age}'
+def add_cache_headers(response, max_age=3600, must_revalidate=False):
+    """Adds client-side caching headers with optional 'must-revalidate'."""
+    cache_control = f'public, max-age={max_age}'
+    if must_revalidate:
+        cache_control += ', must-revalidate'
+    response.headers['Cache-Control'] = cache_control
     return response
+
 
 # --- Routes ---
 
@@ -144,21 +148,33 @@ def single_post(post_id):
 
 @app.route('/style.css')
 def serve_css():
-    response = make_response(send_from_directory('static', 'style.css'))
-    response.headers['Cache-Control'] = 'public, max-age=3600, must-revalidate'
-    return response
+    return add_cache_headers(make_response(send_from_directory('static', 'style.css')), max_age=3600, must_revalidate=True)
 
 @app.route('/script.js')
 def serve_js():
-    response = make_response(send_from_directory('static', 'script.js'))
-    response.headers['Cache-Control'] = 'public, max-age=3600, must-revalidate'
-    return response
+    return add_cache_headers(make_response(send_from_directory('static', 'script.js')), max_age=3600, must_revalidate=True)
 
 @app.route('/favicon.ico')
 def favicon():
-    response = make_response(send_from_directory('static', 'favicon.ico'))
-    response.headers['Cache-Control'] = 'public, max-age=3600, must-revalidate'
-    return response
+    try:
+        return add_cache_headers(make_response(send_from_directory('static', 'favicon.ico')), max_age=3600, must_revalidate=True)
+    except FileNotFoundError:
+        abort(404)
+
+@app.route('/files/<path:filename>')
+def serve_file(filename):
+    """
+    Serves files under /files directory.
+    - Preserves subdirectory structure.
+    - If ?download=true, serves as an attachment.
+    """
+    download = request.args.get('download', 'false').lower() == 'true'
+
+    try:
+        response = make_response(send_from_directory('files', filename, as_attachment=download))
+        return add_cache_headers(response, max_age=3600, must_revalidate=True)
+    except FileNotFoundError:
+        abort(404)
 
 
 from email import utils
