@@ -7,7 +7,7 @@ from sqlalchemy.orm import relationship, sessionmaker, scoped_session
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.dialects.mysql import insert
-
+import re
 import logging
 
 import os
@@ -119,7 +119,9 @@ def store_post(info:dict , pictures=[], files=[], json_files=[]):
                         .get('authorThumbnail', {}) or {} ) \
                         .get('thumbnails', [{}])[-1] \
                         .get('url')
-
+        # Replace thumbnail url for maximum resolution
+        if author_thumb:            
+            author_thumb = re.sub(r'(.*)=s.*', r'\1=s0', author_thumb)
         # Safely navigate to the channel name text
         chan_name = (info.get('author', {}) \
                         .get('authorText', {}) or {} ) \
