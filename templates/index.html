@@ -5,7 +5,7 @@
     <tr data-timestamp="{{ author.timestamp.timestamp() }}">
         <td>
             <div class="post-header">
-                <img src="{{ author.profile_pic_url or '' }}" alt="Profile Picture">
+                <img src="{{ author.profile_pic_url or '' }}" alt="Profile Picture" loading="lazy">
                 <div>
                     <h3>
                         <a href="{{ url_for('channel_page', channel_id=author.channel_id) }}" style="color: white; text-decoration: none;">
