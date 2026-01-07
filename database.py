@@ -63,7 +63,13 @@ class PostAttachment(Base):
     file_path = Column(Text, nullable=False)
 
     __table_args__ = (
-        UniqueConstraint('post_id', 'file_path', name='unique_post_file', mysql_using='hash'),
+        # FIX: Changed UniqueConstraint to Index with unique=True
+        Index(
+            'unique_post_file', 
+            'post_id', 'file_path', 
+            unique=True, 
+            mysql_using='hash'
+        ),
         Index('attachment_post_id_sequence', 'post_id', 'id'),
         {
             'mysql_engine': 'InnoDB',
@@ -105,22 +111,15 @@ class PostContentBlock(Base):
 
     __table_args__ = (
         # Matching: UNIQUE KEY `unique_content_per_post` (`post_id`,`text_content`,`link_url`,`block_index`) USING HASH
-        UniqueConstraint(
-            'post_id', 
-            'text_content', 
-            'link_url', 
-            'block_index', 
-            name='unique_content_per_post', 
+        Index(
+            'unique_content_per_post', 
+            'post_id', 'text_content', 'link_url', 'block_index', 
+            unique=True, 
             mysql_using='hash'
         ),
         
-        # Matching: KEY `post_id_idx` (`post_id`)
         Index('post_id_idx', 'post_id'),
-        
-        # Matching: KEY `id_post_id` (`id`,`post_id`)
         Index('id_post_id', 'id', 'post_id'),
-        
-        # Table engine and character set configuration
         {
             'mysql_engine': 'InnoDB',
             'mysql_charset': 'utf8mb4',
