@@ -40,12 +40,8 @@ app.config['COMPRESS_MIN_SIZE'] = 5000
 Compress(app)
 
 # --- Helper to add Cache-Control headers ---
-def add_cache_headers(response, max_age=3600, must_revalidate=False):
-    """Adds client-side caching headers with optional 'must-revalidate'."""
-    cache_control = f'public, max-age={max_age}'
-    if must_revalidate:
-        cache_control += ', must-revalidate'
-    response.headers['Cache-Control'] = cache_control
+def add_cache_headers(response, max_age=3600):
+    response.headers['Cache-Control'] = f'public, max-age={max_age}'
     return response
 
 
@@ -148,16 +144,16 @@ def single_post(post_id):
 
 @app.route('/style.css')
 def serve_css():
-    return add_cache_headers(make_response(send_from_directory('static', 'style.css')), max_age=3600, must_revalidate=True)
+    return add_cache_headers(make_response(send_from_directory('static', 'style.css')), max_age=3600)
 
 @app.route('/script.js')
 def serve_js():
-    return add_cache_headers(make_response(send_from_directory('static', 'script.js')), max_age=3600, must_revalidate=True)
+    return add_cache_headers(make_response(send_from_directory('static', 'script.js')), max_age=3600)
 
 @app.route('/favicon.ico')
 def favicon():
     try:
-        return add_cache_headers(make_response(send_from_directory('static', 'favicon.ico')), max_age=3600, must_revalidate=True)
+        return add_cache_headers(make_response(send_from_directory('static', 'favicon.ico')), max_age=3600)
     except FileNotFoundError:
         abort(404)
 
@@ -172,7 +168,7 @@ def serve_file(filename):
 
     try:
         response = make_response(send_from_directory('files', filename, as_attachment=download))
-        return add_cache_headers(response, max_age=3600, must_revalidate=True)
+        return add_cache_headers(response, max_age=3600)
     except FileNotFoundError:
         abort(404)
 
