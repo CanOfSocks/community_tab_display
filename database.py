@@ -75,22 +75,52 @@ class PostAttachment(Base):
     post = relationship("CommunityPost", back_populates="attachments")
 
 
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, Index, UniqueConstraint
+from sqlalchemy.orm import relationship
+
 class PostContentBlock(Base):
     __tablename__ = 'post_content_blocks'
 
+    # Matching: `id` int(11) NOT NULL AUTO_INCREMENT
     id = Column(Integer, primary_key=True, autoincrement=True)
+    
+    # Matching text fields: DEFAULT NULL
     text_content = Column(Text, nullable=True)
     link_url = Column(Text, nullable=True)
-    # The SQL defines this as nullable=True and names the FK constraint specifically
+    
+    # Matching: `post_id` varchar(50) DEFAULT NULL
     post_id = Column(
         String(50), 
-        ForeignKey('community_posts.post_id', name='post_id', ondelete='NO ACTION', onupdate='NO ACTION'),
-        nullable=True,
-        index=True
+        ForeignKey(
+            'community_posts.post_id', 
+            name='post_id', 
+            ondelete='NO ACTION', 
+            onupdate='NO ACTION'
+        ),
+        nullable=True
     )
+    
+    # Matching: `block_index` int(11) NOT NULL DEFAULT 0
+    block_index = Column(Integer, nullable=False, server_default='0')
 
     __table_args__ = (
+        # Matching: UNIQUE KEY `unique_content_per_post` (`post_id`,`text_content`,`link_url`,`block_index`) USING HASH
+        UniqueConstraint(
+            'post_id', 
+            'text_content', 
+            'link_url', 
+            'block_index', 
+            name='unique_content_per_post', 
+            mysql_using='hash'
+        ),
+        
+        # Matching: KEY `post_id_idx` (`post_id`)
+        Index('post_id_idx', 'post_id'),
+        
+        # Matching: KEY `id_post_id` (`id`,`post_id`)
         Index('id_post_id', 'id', 'post_id'),
+        
+        # Table engine and character set configuration
         {
             'mysql_engine': 'InnoDB',
             'mysql_charset': 'utf8mb4',
