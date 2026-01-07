@@ -1,7 +1,6 @@
-import sys
 from datetime import datetime
 from sqlalchemy import (
-    create_engine, Column, String, Text, Integer, Boolean, DateTime, ForeignKey, select
+    create_engine, Column, String, Text, Integer, Boolean, DateTime, ForeignKey, select, Index, UniqueConstraint
 )
 from sqlalchemy.orm import relationship, sessionmaker, scoped_session
 from sqlalchemy.ext.declarative import declarative_base
@@ -25,20 +24,28 @@ class CommunityPost(Base):
 
     post_id = Column(String(50), primary_key=True)
     channel_id = Column(String(24), nullable=False)
-    channel_name = Column(Text)
-    profile_pic_url = Column(Text)
+    channel_name = Column(Text, nullable=True)
+    profile_pic_url = Column(Text, nullable=True)
     timestamp = Column(DateTime, nullable=False)
     likes_count = Column(Integer, default=0)
     is_members_only = Column(Boolean, default=False)
 
-    # Relationships ordered by auto-incrementing IDs
+    __table_args__ = (
+        Index('Date_index', 'post_id', 'timestamp'),
+        Index('timestamp', 'timestamp'),
+        {
+            'mysql_engine': 'InnoDB',
+            'mysql_charset': 'utf8mb4',
+            'mysql_collate': 'utf8mb4_unicode_ci'
+        }
+    )
+
     content_blocks = relationship(
         "PostContentBlock",
         back_populates="post",
         order_by="PostContentBlock.id",
         cascade="all, delete-orphan"
     )
-
     attachments = relationship(
         "PostAttachment",
         back_populates="post",
@@ -47,34 +54,51 @@ class CommunityPost(Base):
     )
 
 
-class PostContentBlock(Base):
-    __tablename__ = 'post_content_blocks'
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    post_id = Column(
-        String(50),
-        ForeignKey('community_posts.post_id'),
-        index=True
-    )
-    text_content = Column(Text)
-    link_url = Column(Text)
-
-    post = relationship("CommunityPost", back_populates="content_blocks")
-
-
 class PostAttachment(Base):
     __tablename__ = 'post_attachments'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    post_id = Column(
-        String(50),
-        ForeignKey('community_posts.post_id'),
-        index=True
-    )
-    file_type = Column(String(10))
+    post_id = Column(String(50), ForeignKey('community_posts.post_id'), nullable=False, index=True)
+    file_type = Column(String(10), nullable=True)
     file_path = Column(Text, nullable=False)
 
+    __table_args__ = (
+        UniqueConstraint('post_id', 'file_path', name='unique_post_file', mysql_using='hash'),
+        Index('attachment_post_id_sequence', 'post_id', 'id'),
+        {
+            'mysql_engine': 'InnoDB',
+            'mysql_charset': 'utf8mb4',
+            'mysql_collate': 'utf8mb4_unicode_ci'
+        }
+    )
+
     post = relationship("CommunityPost", back_populates="attachments")
+
+
+class PostContentBlock(Base):
+    __tablename__ = 'post_content_blocks'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    text_content = Column(Text, nullable=True)
+    link_url = Column(Text, nullable=True)
+    # The SQL defines this as nullable=True and names the FK constraint specifically
+    post_id = Column(
+        String(50), 
+        ForeignKey('community_posts.post_id', name='post_id', ondelete='NO ACTION', onupdate='NO ACTION'),
+        nullable=True,
+        index=True
+    )
+
+    __table_args__ = (
+        Index('id_post_id', 'id', 'post_id'),
+        {
+            'mysql_engine': 'InnoDB',
+            'mysql_charset': 'utf8mb4',
+            'mysql_collate': 'utf8mb4_unicode_ci'
+        }
+    )
+
+    post = relationship("CommunityPost", back_populates="content_blocks")
 
 # Create Engine and Tables
 engine = create_engine(DATABASE_URL)

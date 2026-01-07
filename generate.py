@@ -111,6 +111,9 @@ def main(config_file="", ignore_existing=False):
     global config
     with open(config_file, 'r', encoding="utf-8") as f:
         config = json.load(f)
+
+    # Create SQL tables if they don't exist
+    database.Base.metadata.create_all(database.engine)
     # Set the root directory
     root_dir = Path(config.get("post_root"))
 
