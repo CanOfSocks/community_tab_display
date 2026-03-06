@@ -1,0 +1,313 @@
+from datetime import datetime
+from sqlalchemy import (
+    create_engine, Column, String, Text, Integer, Boolean, DateTime, ForeignKey, select, Index 
+)
+from sqlalchemy.orm import relationship, sessionmaker 
+from sqlalchemy.ext.declarative import declarative_base
+
+from sqlalchemy.dialects.mysql import insert
+import re
+import logging
+
+import os
+from dotenv import load_dotenv
+load_dotenv()
+# --- 1. Database Setup ---
+# Using SQLite for this example, but you can swap the connection string for MySQL/Postgres
+DATABASE_URL = os.getenv('DATABASE_ADMIN_URL', os.getenv('DATABASE_URL')) 
+Base = declarative_base()
+
+# --- 2. Define Models ---
+
+class CommunityPost(Base):
+    __tablename__ = 'community_posts'
+
+    post_id = Column(String(50), primary_key=True)
+    channel_id = Column(String(24), nullable=False)
+    channel_name = Column(Text, nullable=True)
+    profile_pic_url = Column(Text, nullable=True)
+    timestamp = Column(DateTime, nullable=False)
+    likes_count = Column(Integer, default=0)
+    is_members_only = Column(Boolean, default=False)
+
+    __table_args__ = (
+        Index('Date_index', 'post_id', 'timestamp'),
+        Index('timestamp', 'timestamp'),
+        {
+            'mysql_engine': 'InnoDB',
+            'mysql_charset': 'utf8mb4',
+            'mysql_collate': 'utf8mb4_unicode_ci'
+        }
+    )
+
+    content_blocks = relationship(
+        "PostContentBlock",
+        back_populates="post",
+        order_by="PostContentBlock.id",
+        cascade="all, delete-orphan"
+    )
+    attachments = relationship(
+        "PostAttachment",
+        back_populates="post",
+        order_by="PostAttachment.id",
+        cascade="all, delete-orphan"
+    )
+
+
+class PostAttachment(Base):
+    __tablename__ = 'post_attachments'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    post_id = Column(String(50), ForeignKey('community_posts.post_id'), nullable=False, index=True)
+    file_type = Column(String(10), nullable=True)
+    file_path = Column(Text, nullable=False)
+
+    __table_args__ = (
+        # FIX: Changed UniqueConstraint to Index with unique=True
+        Index(
+            'unique_post_file', 
+            'post_id', 'file_path', 
+            unique=True, 
+            mysql_using='hash'
+        ),
+        Index('attachment_post_id_sequence', 'post_id', 'id'),
+        {
+            'mysql_engine': 'InnoDB',
+            'mysql_charset': 'utf8mb4',
+            'mysql_collate': 'utf8mb4_unicode_ci'
+        }
+    )
+
+    post = relationship("CommunityPost", back_populates="attachments")
+
+
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, Index, UniqueConstraint
+from sqlalchemy.orm import relationship
+
+class PostContentBlock(Base):
+    __tablename__ = 'post_content_blocks'
+
+    # Matching: `id` int(11) NOT NULL AUTO_INCREMENT
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    
+    # Matching text fields: DEFAULT NULL
+    text_content = Column(Text, nullable=True)
+    link_url = Column(Text, nullable=True)
+    
+    # Matching: `post_id` varchar(50) DEFAULT NULL
+    post_id = Column(
+        String(50), 
+        ForeignKey(
+            'community_posts.post_id', 
+            name='post_id', 
+            ondelete='NO ACTION', 
+            onupdate='NO ACTION'
+        ),
+        nullable=True
+    )
+    
+    # Matching: `block_index` int(11) NOT NULL DEFAULT 0
+    block_index = Column(Integer, nullable=False, server_default='0')
+
+    __table_args__ = (
+        # Matching: UNIQUE KEY `unique_content_per_post` (`post_id`,`text_content`,`link_url`,`block_index`) USING HASH
+        Index(
+            'unique_content_per_post', 
+            'post_id', 'text_content', 'link_url', 'block_index', 
+            unique=True, 
+            mysql_using='hash'
+        ),
+        
+        Index('post_id_idx', 'post_id'),
+        Index('id_post_id', 'id', 'post_id'),
+        {
+            'mysql_engine': 'InnoDB',
+            'mysql_charset': 'utf8mb4',
+        }
+    )
+
+    post = relationship("CommunityPost", back_populates="content_blocks")
+
+# Create Engine and Tables
+engine = create_engine(DATABASE_URL)
+Base.metadata.create_all(engine)
+Session = sessionmaker(bind=engine)
+session = Session()
+
+# --- 3. Parsing & Storage Logic ---
+def parse_shorthand(value):
+    # Mapping suffixes to their numerical multipliers
+    multipliers = {
+        'K': 1000,
+        'M': 1000000,
+        'B': 1000000000
+    }
+
+    # Ensure we are working with an upper-case string
+    value = str(value).upper().strip()
+
+    # Check if the last character is one of our suffixes
+    if value[-1] in multipliers:
+        suffix = value[-1]
+        number_part = float(value[:-1]) # Everything except the suffix
+        return int(number_part * multipliers[suffix])
+    
+    # If no suffix, just convert to float then int
+    return int(float(value))
+
+def store_post(info:dict , pictures=[], files=[], json_files=[]):
+    post_id = info['post_id']
+
+    # --- 1. Extract Metadata (Same as your original logic) ---
+    try:
+        # Safely navigate to the last thumbnail URL
+        author_thumb = (info.get('author', {}) \
+                        .get('authorThumbnail', {}) or {} ) \
+                        .get('thumbnails', [{}])[-1] \
+                        .get('url', None) \
+                        or \
+                        (info.get("original_post") \
+                        .get('author', {}) \
+                        .get('authorThumbnail', {}) or {} ) \
+                        .get('thumbnails', [{}])[-1] \
+                        .get('url')
+        # Replace thumbnail url for maximum resolution
+        if author_thumb:            
+            author_thumb = re.sub(r'(.*)=s.*', r'\1=s0', author_thumb)
+        # Safely navigate to the channel name text
+        chan_name = (info.get('author', {}) \
+                        .get('authorText', {}) or {} ) \
+                        .get('runs', [{}])[0] \
+                        .get('text', None) \
+                        or \
+                        (info.get("original_post") \
+                        .get('author', {}) \
+                        .get('authorText', {}) or {} ) \
+                        .get('runs', [{}])[0] \
+                        .get('text', 'Unknown')
+        
+        
+        # Safe Like Conversion
+        likes_text = (info.get('vote_count', {}) or {}).get('simpleText', None)
+        likes = parse_shorthand(likes_text.replace(',', '')) if likes_text else 0
+        
+        # Timestamp
+        ts = (info.get('_published', {}) or {}).get('lastUpdatedTimestamp')
+        timestamp = datetime.fromtimestamp(int(ts)) if ts else datetime.now(datetime.timezone.utc)
+
+        # --- 2. Insert Parent (INSERT IGNORE) ---
+        post_values = {
+            "post_id": post_id,
+            "channel_id": info.get('channel_id'),
+            "channel_name": chan_name,
+            "profile_pic_url": author_thumb,
+            "timestamp": timestamp,
+            "likes_count": likes,
+            "is_members_only": (info.get('sponsor_only_badge') is not None)
+        }
+
+        # Using prefix_with("IGNORE") for MariaDB
+        parent_stmt = insert(CommunityPost).values(post_values).prefix_with("IGNORE")
+        session.execute(parent_stmt)
+
+        # --- 3. Insert Content Blocks (INSERT IGNORE) ---
+        if info.get('content_text', {}).get('runs'):
+            block_list = []
+            # Use enumerate to create the block_index automatically
+            for i, run in enumerate(info['content_text']['runs']):
+                url = None
+                if run.get('urlEndpoint'):
+                    url = run['urlEndpoint'].get('url')
+                elif run.get('browseEndpoint'):
+                    url = "https://youtube.com" + run['browseEndpoint'].get('url', '')
+                elif run.get('navigationEndpoint'):
+                    cmd_meta = run.get('navigationEndpoint', {}).get('commandMetadata', {}).get('webCommandMetadata', {})
+                    if cmd_meta.get('url'):
+                        url = "https://youtube.com" + cmd_meta['url']
+                
+                block_list.append({
+                    "post_id": post_id,
+                    "block_index": i,  # Adding the enumeration here
+                    "text_content": run.get('text', ''),
+                    "link_url": url 
+                })
+            
+            if block_list:
+                block_stmt = insert(PostContentBlock).values(block_list).prefix_with("IGNORE")
+                session.execute(block_stmt)
+
+        # --- 4. Insert Attachments (INSERT IGNORE) ---
+        attachment_list = []
+        for f_path in json_files:
+            attachment_list.append({"post_id": post_id, "file_type": 'JSON', "file_path": f_path})
+        for f_path in pictures:
+            attachment_list.append({"post_id": post_id, "file_type": 'IMAGE', "file_path": f_path})
+        for f_path in files:
+            attachment_list.append({"post_id": post_id, "file_type": 'FILE', "file_path": f_path})
+
+        if attachment_list:
+            attr_stmt = insert(PostAttachment).values(attachment_list).prefix_with("IGNORE")
+            session.execute(attr_stmt)
+
+        session.commit()
+        logging.info(f"Processed Post ID: {post_id}")
+
+    except Exception as e:
+        session.rollback()
+        logging.exception(f"Critical error storing Post ID {post_id}: {e}")
+
+def get_existing_posts():
+    return set(session.scalars(select(CommunityPost.post_id)))
+
+# --- 4. Retrieval Logic (Recreating the Data Structures) ---
+
+def retrieve_post_data(post_id):
+    """
+    Query the database and reconstruct the 'info', 'pictures', and 'files' 
+    structures required by the HTML generator.
+    """
+    post = session.query(CommunityPost).filter_by(post_id=post_id).first()
+    
+    if not post:
+        logging.warning("Post not found.")
+        return None, None, None
+
+    # Reconstruct 'info' dictionary
+    info = {
+        'post_id': post.post_id,
+        'channel_id': post.channel_id,
+        '_published': {'lastUpdatedTimestamp': str(post.timestamp)},
+        'sponsor_only_badge': True if post.is_members_only else None,
+        'vote_count': {'simpleText': post.likes_count} if post.likes_count else None,
+        'author': {
+            'authorThumbnail': {
+                'thumbnails': [{'url': post.profile_pic_url}] # Mocking list structure
+            } if post.profile_pic_url else None,
+            'authorText': {
+                'runs': [{'text': post.channel_name}]
+            }
+        },
+        'content_text': {'runs': []}
+    }
+
+    # Reconstruct Content Runs (Order is guaranteed by SQLAlchemy relationship)
+    for block in post.content_blocks:
+        run_dict = {'text': block.text_content}
+        
+        # If there was a URL, we need to reconstruct an endpoint structure
+        # so the HTML generator detects it.
+        if block.link_url:
+            # For simplicity, we can map all links back to urlEndpoint 
+            # or handle logic to check if it contains youtube.com to map back to browseEndpoint
+            # This is a simplified reconstruction:
+            run_dict['urlEndpoint'] = {'url': block.link_url}
+        
+        info['content_text']['runs'].append(run_dict)
+
+    # Reconstruct Lists
+    pictures = [a.file_path for a in post.attachments if a.attachment_type == 'IMAGE']
+    files = [a.file_path for a in post.attachments if a.attachment_type == 'FILE']
+
+    return info, pictures, files
+
+

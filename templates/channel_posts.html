@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% from 'post_macro.html' import render_post %}
+
+{% block title %}{{ channel_name }} - Posts{% endblock %}
+
+{% block content %}
+    {% for post in posts %}
+        {{ render_post(post) }}
+    {% endfor %}
+{% endblock %}
+
+{% block pagination %}
+    <div class="pagination">
+        {% if pagination.has_prev %}
+            <a href="{{ url_for('channel_page', channel_id=channel_id, page=pagination.prev_num) }}" class="link-block">&lt; Prev</a>
+        {% else %}
+            <span></span> {% endif %}
+
+        <span style="color: #888;">Page {{ pagination.page }}</span>
+
+        {% if pagination.has_next %}
+            <a href="{{ url_for('channel_page', channel_id=channel_id, page=pagination.next_num) }}" class="link-block">Next &gt;</a>
+        {% else %}
+            <span></span>
+        {% endif %}
+    </div>
+{% endblock %}
